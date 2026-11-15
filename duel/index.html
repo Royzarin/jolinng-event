@@ -17,7 +17,8 @@ body{margin:0;background:#01d1ff;color:var(--ink);font-family:"Gochi Hand","Comi
 .stage{position:relative;width:min(100vw,calc(100vh * 16 / 9));width:min(100vw,calc(100dvh * 16 / 9));aspect-ratio:16/9;border-radius:0;overflow:hidden;container-type:inline-size;background:var(--sky);isolation:isolate;flex:none}
 body::after{content:"";position:fixed;inset:0;pointer-events:none;opacity:.35;mix-blend-mode:multiply;z-index:20;
   background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='220' height='220'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='2'/%3E%3CfeColorMatrix values='0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 .35 0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E")}
-.doodles{position:absolute;inset:0;pointer-events:none;z-index:0}
+.doodles{position:absolute;inset:0;pointer-events:none;z-index:0;display:none}
+.stage[data-screen=sHome] .doodles,.stage[data-screen=sForm] .doodles,.stage:not([data-screen]) .doodles{display:block}
 .screen{position:absolute;inset:0;display:none;z-index:1}
 .screen.on{display:block;animation:pop .35s ease}
 @keyframes pop{from{opacity:0;transform:scale(.97)}to{opacity:1;transform:none}}
@@ -82,7 +83,7 @@ body::after{content:"";position:fixed;inset:0;pointer-events:none;opacity:.35;mi
 @keyframes boom{0%{transform:scale(.3) rotate(-10deg);opacity:0}30%{transform:scale(1.1) rotate(4deg);opacity:1}100%{transform:scale(1);opacity:0}}
 
 /* Manche */
-.hud{position:absolute;top:2cqw;left:3cqw;right:9cqw;display:flex;justify-content:space-between;align-items:center}
+.hud{position:absolute;top:2cqw;left:3cqw;right:15cqw;display:flex;justify-content:space-between;align-items:center}
 .tag{--fill:#fff;padding:.6cqw 1.6cqw;font-size:2cqw}
 .tag.stake{--fill:var(--yellow);transform:rotate(-2deg)}
 .tag.round{transform:rotate(1.5deg)}
@@ -101,7 +102,8 @@ body::after{content:"";position:fixed;inset:0;pointer-events:none;opacity:.35;mi
 .lanes{position:absolute;top:23.5cqw;left:3cqw;right:3cqw;display:grid;gap:1.6cqw}
 .lane{--fill:#fff;padding:1cqw 2cqw 1.4cqw}
 .lane.mine{--fill:#fffbd6}
-.lane.mine::after{content:"← c'est toi !";position:absolute;right:-1cqw;top:-1.6cqw;font-size:1.6cqw;background:var(--yellow);border:.25cqw solid #111;border-radius:1cqw;padding:0 .8cqw;transform:rotate(3deg)}
+.lane .me{display:none;font-size:1.5cqw;background:var(--yellow);border:.22cqw solid #111;border-radius:1cqw;padding:0 .8cqw;margin-left:.6cqw}
+.lane.mine .me{display:inline-block}
 .lane-head{display:flex;justify-content:space-between;text-align:center;align-items:center;font-size:2.1cqw;margin-bottom:.2cqw}
 .lane-head .who{display:flex;align-items:center;gap:.8cqw}
 .lane-head .who img{width:4cqw;height:3cqw;object-fit:contain}
@@ -120,7 +122,7 @@ body::after{content:"";position:fixed;inset:0;pointer-events:none;opacity:.35;mi
 #typer{position:absolute;left:0;right:0;top:12cqw;bottom:0;width:100%;opacity:0;font-size:16px;color:transparent;caret-color:transparent;background:transparent;border:0;outline:none;z-index:4;cursor:text;-webkit-appearance:none}
 
 /* Résultats */
-.result{position:absolute;left:10cqw;right:10cqw;top:5cqw;bottom:3.5cqw;--fill:#fff;padding:1.8cqw 3cqw;text-align:center;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:1cqw;transform:rotate(-.8deg)}
+.result{position:absolute;left:10cqw;right:10cqw;top:8.5cqw;bottom:2.5cqw;--fill:#fff;padding:1.8cqw 3cqw;text-align:center;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:1cqw;transform:rotate(-.8deg)}
 .result h2{margin:0;font-family:"Caveat Brush",cursive;font-weight:400;font-size:4.6cqw;line-height:1}
 .duo{display:flex;gap:3cqw;width:100%;justify-content:center}
 .pcard{flex:1;max-width:26cqw;padding:1cqw;font-size:1.8cqw;line-height:1.3;display:flex;flex-direction:column;align-items:center}
@@ -169,10 +171,10 @@ input[type=number]{width:64px}
     <g filter="url(#crayon)" stroke="#111" stroke-width="5" stroke-linejoin="round">
       <path d="M80 90 l16 34 37 4 -28 25 8 37 -33 -19 -33 19 8 -37 -28 -25 37 -4z" fill="#ffdf00"/>
       <path d="M1500 200 l12 26 28 3 -21 19 6 28 -25 -14 -25 14 6 -28 -21 -19 28 -3z" fill="#ffdf00"/>
-      <path d="M1290 40 l10 22 24 2 -18 16 5 24 -21 -12 -21 12 5 -24 -18 -16 24 -2z" fill="#fff"/>
+      <path d="M1460 400 l10 22 24 2 -18 16 5 24 -21 -12 -21 12 5 -24 -18 -16 24 -2z" fill="#fff"/>
       <path d="M560 870 q30 -40 60 0 t60 0 t60 0" fill="none" stroke="#ff2a2a" stroke-width="7"/>
-      <path d="M220 40 q20 30 40 0 t40 0 t40 0" fill="none" stroke="#fff" stroke-width="6"/>
-      <circle cx="420" cy="70" r="10" fill="#f5a3c7"/><circle cx="1180" cy="80" r="12" fill="#f5a3c7"/>
+      <path d="M60 330 q20 30 40 0 t40 0 t40 0" fill="none" stroke="#fff" stroke-width="6"/>
+      <circle cx="170" cy="250" r="10" fill="#f5a3c7"/><circle cx="1400" cy="290" r="12" fill="#f5a3c7"/>
     </g>
   </svg>
 
@@ -239,8 +241,8 @@ input[type=number]{width:64px}
       <div class="finish"></div>
     </div>
     <div class="lanes">
-      <div class="lane box" id="laneA"><div class="lane-head"><span class="who"><img src="../cats/noir.webp" alt=""><span id="laneAname">JoLinng</span></span><span class="stats"><b id="wpmA">0</b> mots/min · <span id="accA">100</span> % justes</span></div><div class="words"><div class="words-inner" id="wordsA"></div></div></div>
-      <div class="lane box" id="laneB"><div class="lane-head"><span class="who"><img src="../cats/orange.webp" alt=""><span id="laneBname">Viewer</span></span><span class="stats"><b id="wpmB">0</b> mots/min · <span id="accB">100</span> % justes</span></div><div class="words"><div class="words-inner" id="wordsB"></div></div></div>
+      <div class="lane box" id="laneA"><div class="lane-head"><span class="who"><img src="../cats/noir.webp" alt=""><span id="laneAname">JoLinng</span><span class="me">toi</span></span><span class="stats"><b id="wpmA">0</b> mots/min · <span id="accA">100</span> % justes</span></div><div class="words"><div class="words-inner" id="wordsA"></div></div></div>
+      <div class="lane box" id="laneB"><div class="lane-head"><span class="who"><img src="../cats/orange.webp" alt=""><span id="laneBname">Viewer</span><span class="me">toi</span></span><span class="stats"><b id="wpmB">0</b> mots/min · <span id="accB">100</span> % justes</span></div><div class="words"><div class="words-inner" id="wordsB"></div></div></div>
     </div>
     <div class="hint" id="typeHint">Tape les mots ! Espace = mot suivant. (Clique ici si le clavier ne répond pas)</div>
     <input id="typer" type="text" inputmode="text" enterkeyhint="next" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" aria-label="Zone de frappe">
@@ -304,7 +306,7 @@ const pick=a=>a[Math.floor(Math.random()*a.length)];
 const fmt=n=>n.toLocaleString('fr-FR',{maximumFractionDigits:2})+' €';
 const esc=s=>String(s==null?'':s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
 const clean=s=>String(s||'').replace(/[^\p{L}\p{N} _.\-]/gu,'').trim().slice(0,18);
-function show(id){document.querySelectorAll('.screen').forEach(s=>s.classList.toggle('on',s.id===id))}
+function show(id){document.querySelectorAll('.screen').forEach(s=>s.classList.toggle('on',s.id===id));$('#stage').dataset.screen=id}
 let toastT;function toast(t){const el=$('#toast');el.textContent=t;el.classList.add('on');clearTimeout(toastT);toastT=setTimeout(()=>el.classList.remove('on'),3200)}
 
 /* ============ Sons (générés, pas de fichier) ============ */
@@ -568,7 +570,7 @@ $('#typer').addEventListener('paste',e=>e.preventDefault()); // pas de copier-co
 /* Mode auto de JoLinng (annoncé sur le live, activation invisible) : Ctrl + Maj + A pendant une manche.
    Les mots s'écrivent tout seuls, vite, avec une faute tous les 12 mots. Rien ne s'affiche à l'écran. */
 document.addEventListener('keydown',e=>{
-  if(!(e.ctrlKey&&e.shiftKey&&e.code==='KeyA'))return;
+  if(!(e.ctrlKey&&e.shiftKey&&!e.metaKey&&((e.key||'').toLowerCase()==='a'||e.code==='KeyA')))return;
   e.preventDefault();if(!R||R.over||G.mode!=='host')return; // réservé à JoLinng
   toggleAuto();
 });
