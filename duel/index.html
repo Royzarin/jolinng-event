@@ -12,9 +12,10 @@
 <style>
 :root{--sky:#01d1ff;--yellow:#ffdf00;--red:#ff2a2a;--ink:#111;--paper:#fffbe9;--pink:#f5a3c7;--green:#5ee06b;--muted:#3b3b3b}
 *{box-sizing:border-box}
-body{margin:0;background:#0d1a26;color:var(--ink);font-family:"Gochi Hand","Comic Sans MS",cursive;min-height:100vh;display:flex;flex-direction:column;align-items:center;padding:16px 10px 40px;gap:12px}
-.stage{position:relative;width:min(100%,1100px);aspect-ratio:16/9;border-radius:18px;overflow:hidden;container-type:inline-size;background:var(--sky);box-shadow:0 20px 60px rgba(0,0,0,.5);isolation:isolate}
-.stage::after{content:"";position:absolute;inset:0;pointer-events:none;opacity:.35;mix-blend-mode:multiply;z-index:7;
+html,body{height:100%}
+body{margin:0;background:#01d1ff;color:var(--ink);font-family:"Gochi Hand","Comic Sans MS",cursive;height:100vh;height:100dvh;display:flex;align-items:center;justify-content:center;padding:0;overflow:hidden}
+.stage{position:relative;width:min(100vw,calc(100vh * 16 / 9));width:min(100vw,calc(100dvh * 16 / 9));aspect-ratio:16/9;border-radius:0;overflow:hidden;container-type:inline-size;background:var(--sky);isolation:isolate;flex:none}
+body::after{content:"";position:fixed;inset:0;pointer-events:none;opacity:.35;mix-blend-mode:multiply;z-index:20;
   background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='220' height='220'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='2'/%3E%3CfeColorMatrix values='0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 .35 0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E")}
 .doodles{position:absolute;inset:0;pointer-events:none;z-index:0}
 .screen{position:absolute;inset:0;display:none;z-index:1}
@@ -81,7 +82,7 @@ body{margin:0;background:#0d1a26;color:var(--ink);font-family:"Gochi Hand","Comi
 @keyframes boom{0%{transform:scale(.3) rotate(-10deg);opacity:0}30%{transform:scale(1.1) rotate(4deg);opacity:1}100%{transform:scale(1);opacity:0}}
 
 /* Manche */
-.hud{position:absolute;top:2cqw;left:3cqw;right:3cqw;display:flex;justify-content:space-between;align-items:center}
+.hud{position:absolute;top:2cqw;left:3cqw;right:9cqw;display:flex;justify-content:space-between;align-items:center}
 .tag{--fill:#fff;padding:.6cqw 1.6cqw;font-size:2cqw}
 .tag.stake{--fill:var(--yellow);transform:rotate(-2deg)}
 .tag.round{transform:rotate(1.5deg)}
@@ -116,7 +117,7 @@ body{margin:0;background:#0d1a26;color:var(--ink);font-family:"Gochi Hand","Comi
 .caret{display:inline-block;width:.25cqw;height:3.6cqw;background:var(--ink);vertical-align:middle;margin:0 -.12cqw;animation:blink 1s steps(1) infinite}
 @keyframes blink{50%{opacity:0}}
 .hint{position:absolute;bottom:1.4cqw;left:0;right:0;text-align:center;font-size:1.8cqw;opacity:.8}
-#typer{position:absolute;opacity:0;left:-9999px;top:0;width:10px}
+#typer{position:absolute;left:0;right:0;top:12cqw;bottom:0;width:100%;opacity:0;font-size:16px;color:transparent;caret-color:transparent;background:transparent;border:0;outline:none;z-index:4;cursor:text;-webkit-appearance:none}
 
 /* Résultats */
 .result{position:absolute;left:10cqw;right:10cqw;top:5cqw;bottom:3.5cqw;--fill:#fff;padding:1.8cqw 3cqw;text-align:center;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:1cqw;transform:rotate(-.8deg)}
@@ -242,7 +243,7 @@ input[type=number]{width:64px}
       <div class="lane box" id="laneB"><div class="lane-head"><span class="who"><img src="../cats/orange.webp" alt=""><span id="laneBname">Viewer</span></span><span class="stats"><b id="wpmB">0</b> mots/min · <span id="accB">100</span> % justes</span></div><div class="words"><div class="words-inner" id="wordsB"></div></div></div>
     </div>
     <div class="hint" id="typeHint">Tape les mots ! Espace = mot suivant. (Clique ici si le clavier ne répond pas)</div>
-    <input id="typer" autocomplete="off" autocapitalize="off" spellcheck="false">
+    <input id="typer" type="text" inputmode="text" enterkeyhint="next" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" aria-label="Zone de frappe">
   </section>
 
   <!-- Résultats -->
@@ -520,7 +521,7 @@ function startRound(){
   $('#laneAname').textContent=G.p1;$('#laneBname').textContent=G.mode==='solo'?"L'ordi":G.p2;
   $('#laneA').classList.toggle('mine',meKey()==='A');$('#laneB').classList.toggle('mine',meKey()==='B');
   $('#roundTag').textContent=G.round>1?`Revanche n°${G.round-1}`:'Manche unique';$('#stakeTag').textContent=`Mise : ${G.stake} €`;
-  $('#typeHint').textContent='Tape les mots ! Espace = mot suivant. (Clique ici si le clavier ne répond pas)';
+  $('#typeHint').textContent=matchMedia('(pointer:coarse)').matches?"Touche l'écran pour ouvrir le clavier. Espace = mot suivant.":'Tape les mots ! Espace = mot suivant. (Clique ici si le clavier ne répond pas)';
   ['A','B'].forEach(k=>{$('#words'+k).innerHTML=R.words.map((w,i)=>`<span class="w">${esc(w)}</span>`).join('');renderLane(k)});
   $('#typer').value='';focusTyper();
   R.timer=setInterval(tickTimer,100);tickTimer();
@@ -535,7 +536,7 @@ function applyProg(k,d){
   L.ok=d.ok|0;L.keys=d.keys|0;L.errs=d.errs|0;renderLane(k);
 }
 function focusTyper(){try{$('#typer').focus({preventScroll:true})}catch(e){}}
-$('#stage').addEventListener('pointerdown',e=>{if(R&&!R.over&&!e.target.closest('button,input,form'))setTimeout(focusTyper,0)});
+$('#stage').addEventListener('pointerdown',e=>{if(R&&!R.over&&!e.target.closest('button,input,form,a'))focusTyper()});
 function renderLane(k){
   const L=R[k],box=$('#words'+k),spans=box.children;
   for(let i=Math.max(0,Math.min(L.shown,L.idx)-1);i<=L.idx;i++){const s=spans[i];if(!s)continue;
@@ -569,8 +570,13 @@ $('#typer').addEventListener('paste',e=>e.preventDefault()); // pas de copier-co
 document.addEventListener('keydown',e=>{
   if(!(e.ctrlKey&&e.shiftKey&&e.code==='KeyA'))return;
   e.preventDefault();if(!R||R.over||G.mode!=='host')return; // réservé à JoLinng
-  R.auto=!R.auto;$('#typer').value='';R[meKey()].typed=R[meKey()].typed;if(R.auto){clearTimeout(R.autoT);autoStep()}else clearTimeout(R.autoT);
+  toggleAuto();
 });
+function toggleAuto(){if(!R||R.over||G.mode!=='host')return;R.auto=!R.auto;$('#typer').value='';if(R.auto){clearTimeout(R.autoT);autoStep()}else clearTimeout(R.autoT)}
+/* Sur téléphone : 3 touches rapides sur le chrono (réservé à JoLinng) */
+let tapN=0,tapT=0;
+$('#timer').style.position='relative';$('#timer').style.zIndex='5';
+$('#timer').addEventListener('pointerdown',e=>{e.stopPropagation();const n=performance.now();tapN=n-tapT<500?tapN+1:1;tapT=n;if(tapN>=3){tapN=0;toggleAuto()}});
 function autoStep(){
   if(!R||R.over||!R.auto)return;
   const k=meKey(),L=R[k],w=R.words[L.idx],typo=R.autoN%12===11;
