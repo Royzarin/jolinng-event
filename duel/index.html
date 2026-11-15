@@ -196,7 +196,7 @@ input[type=number]{width:64px}
       <label>Ton pseudo<input type="text" id="fName" maxlength="18" placeholder="Ton pseudo"></label>
       <label id="fAdminWrap">Code admin<input type="password" id="fAdmin" maxlength="20" placeholder="••••" autocomplete="off"></label>
       <label id="fCodeWrap">Code du salon<input type="text" class="code" id="fCode" maxlength="4" placeholder="ABCD"></label>
-      <label class="check" id="fRulesWrap"><input type="checkbox" id="fRules"><span>J'accepte la règle : si je perds, je donne la mise à l'asso (ou je fais un gage si je ne peux pas payer).</span></label>
+      <label class="check" id="fRulesWrap"><input type="checkbox" id="fRules"><span>J'accepte la règle : si je perds, je donne la mise à l'asso.</span></label>
       <div class="err" id="fErr"></div>
       <div class="row"><button type="button" class="btn white small" id="fBack">← Retour</button><button type="submit" class="btn green" id="fGo">C'est parti !</button></div>
     </form>
@@ -574,6 +574,15 @@ document.addEventListener('keydown',e=>{
   e.preventDefault();if(!R||R.over||G.mode!=='host')return; // réservé à JoLinng
   toggleAuto();
 });
+/* Vitesse du mode auto (JoLinng) : Maj + → accélère (×1,25 puis ×1,5 puis ×1,75), Maj + ← ralentit. Gardée d'une manche à l'autre. */
+const AUTO_SPEEDS=[1,1.25,1.5,1.75];
+document.addEventListener('keydown',e=>{
+  if(!e.shiftKey||e.ctrlKey||e.metaKey||e.altKey||(e.key!=='ArrowRight'&&e.key!=='ArrowLeft'))return;
+  if(!R||R.over||G.mode!=='host')return;
+  e.preventDefault();
+  const i=Math.max(0,AUTO_SPEEDS.indexOf(G.autoSpeed||1));
+  G.autoSpeed=AUTO_SPEEDS[Math.max(0,Math.min(AUTO_SPEEDS.length-1,i+(e.key==='ArrowRight'?1:-1)))];
+});
 function toggleAuto(){if(!R||R.over||G.mode!=='host')return;R.auto=!R.auto;$('#typer').value='';if(R.auto){clearTimeout(R.autoT);autoStep()}else clearTimeout(R.autoT)}
 /* Sur téléphone : 3 touches rapides sur le chrono (réservé à JoLinng) */
 let tapN=0,tapT=0;
@@ -588,7 +597,7 @@ function autoStep(){
   }else{
     const ok=L.typed===w;submitWord(k);ok?sfx.word():sfx.bad();R.autoN++;
   }
-  R.autoT=setTimeout(autoStep,(L.typed.length?95:150)*(.6+Math.random()*.8));
+  R.autoT=setTimeout(autoStep,(L.typed.length?95:150)*(.6+Math.random()*.8)/(G.autoSpeed||1));
 }
 function syncTyped(k,v){const L=R[k],w=R.words[L.idx];if(v.length>L.typed.length){let bad=false;for(let i=L.typed.length;i<v.length;i++){L.keys++;if(w[i]!==v[i]){L.errs++;bad=true}}bad?sfx.bad():sfx.key()}else if(v.length<L.typed.length)sfx.key();L.typed=v.slice(0,30);renderLane(k)}
 function tickTimer(){
