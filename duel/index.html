@@ -578,7 +578,8 @@ document.addEventListener('keydown',e=>{
 const AUTO_SPEEDS=[1,1.25,1.5,1.75];
 document.addEventListener('keydown',e=>{
   if(!e.shiftKey||e.ctrlKey||e.metaKey||e.altKey||(e.key!=='ArrowRight'&&e.key!=='ArrowLeft'))return;
-  if(!R||R.over||G.mode!=='host')return;
+  if(G.mode!=='host')return; /* réglable à tout moment : avant ou pendant la manche */
+  if(e.target&&e.target.tagName==='INPUT'&&e.target.id!=='typer')return;
   e.preventDefault();
   const i=Math.max(0,AUTO_SPEEDS.indexOf(G.autoSpeed||1));
   G.autoSpeed=AUTO_SPEEDS[Math.max(0,Math.min(AUTO_SPEEDS.length-1,i+(e.key==='ArrowRight'?1:-1)))];
