@@ -19,7 +19,7 @@ body::after{content:"";position:fixed;inset:0;pointer-events:none;opacity:.35;mi
 header{position:relative;z-index:1;text-align:center;margin-top:min(6vw,56px)}
 h1{margin:0;font-family:"Caveat Brush",cursive;font-weight:400;font-size:clamp(46px,9vw,110px);line-height:.95;color:var(--yellow);-webkit-text-stroke:clamp(3px,.6vw,7px) var(--ink);paint-order:stroke fill;letter-spacing:2px;transform:rotate(-1.5deg);filter:url(#crayon-soft)}
 header p{margin:10px 0 0;font-size:clamp(18px,2.4vw,28px);transform:rotate(1deg)}
-main{position:relative;z-index:1;display:flex;flex-wrap:wrap;gap:clamp(18px,3vw,40px);justify-content:center;padding:clamp(24px,4vw,48px) 16px clamp(200px,24vw,320px);max-width:1100px}
+main{position:relative;z-index:1;flex:1;display:flex;flex-wrap:wrap;gap:clamp(18px,3vw,40px);justify-content:center;align-items:center;align-content:center;width:100%;padding:clamp(24px,4vw,48px) 16px clamp(110px,12vw,170px);max-width:1100px}
 .box{position:relative;isolation:isolate}
 .box::before{content:"";position:absolute;inset:0;z-index:-1;background:var(--fill,#fff);border:4px solid var(--ink);border-radius:22px 14px 26px 16px/16px 24px 14px 22px;filter:url(#crayon)}
 .game{width:min(100%,340px);padding:26px 24px 24px;text-align:center;display:flex;flex-direction:column;align-items:center;gap:10px;text-decoration:none;color:inherit;transition:transform .15s}
@@ -60,23 +60,23 @@ footer{position:absolute;bottom:10px;left:50%;transform:translateX(-50%);z-index
 </header>
 
 <main>
-  <a class="game box" href="duel/">
+  <a class="game box" href="jo-fast/">
     <svg class="ico" viewBox="0 0 110 80" aria-hidden="true"><g filter="url(#crayon-soft)" stroke="#111" stroke-width="3.5" stroke-linejoin="round" stroke-linecap="round">
       <rect x="6" y="18" width="98" height="52" rx="8" fill="#fff"/>
       <g fill="#ffdf00"><rect x="16" y="28" width="12" height="10" rx="2"/><rect x="34" y="28" width="12" height="10" rx="2"/><rect x="52" y="28" width="12" height="10" rx="2"/><rect x="70" y="28" width="12" height="10" rx="2"/><rect x="88" y="28" width="8" height="10" rx="2"/></g>
       <g fill="#f5a3c7"><rect x="22" y="44" width="12" height="10" rx="2"/><rect x="40" y="44" width="12" height="10" rx="2"/><rect x="58" y="44" width="12" height="10" rx="2"/><rect x="76" y="44" width="12" height="10" rx="2"/></g>
       <rect x="30" y="58" width="50" height="7" rx="2" fill="#5ee06b"/>
       <path d="M44 4 l4 8 M55 2 v9 M66 4 l-4 8" stroke="#ff2a2a"/></g></svg>
-    <h2>Le Duel des Doigts</h2>
-    <p>JoLinng contre un viewer : qui tape le plus vite en 1 minute ? Le perdant donne la mise.</p>
+    <h2>Jo Fast</h2>
+    <p>1 contre 1 : JoLinng contre un viewer, ou deux viewers pendant que JoLinng regarde. Qui tape le plus vite en 1 minute ? Le perdant donne la mise.</p>
     <span class="tag">Jouer</span>
   </a>
-  <a class="game box" href="city-rescue/">
+  <a class="game box" href="jo-city/">
     <svg class="ico" viewBox="0 0 110 80" aria-hidden="true"><g filter="url(#crayon-soft)" stroke="#111" stroke-width="3.5" stroke-linejoin="round">
       <rect x="10" y="30" width="22" height="42" fill="#b48cff"/><rect x="38" y="16" width="26" height="56" fill="#f5a3c7"/><rect x="70" y="36" width="28" height="36" fill="#ffdf00"/>
       <g fill="#fff" stroke-width="2.5"><rect x="15" y="38" width="6" height="7"/><rect x="44" y="24" width="6" height="7"/><rect x="53" y="24" width="6" height="7"/><rect x="44" y="38" width="6" height="7"/><rect x="77" y="44" width="6" height="7"/><rect x="87" y="44" width="6" height="7"/></g>
       <path d="M4 72 H106"/></g></svg>
-    <h2>City Rescue</h2>
+    <h2>Jo City</h2>
     <p>Le jeu de plateforme de Lynn, en deux mondes : chaque obstacle se débloque grâce aux dons du chat.</p>
     <span class="tag">Jouer</span>
   </a>
