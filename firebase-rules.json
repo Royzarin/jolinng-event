@@ -1,0 +1,17 @@
+{
+  "rules": {
+    ".read": false,
+    ".write": false,
+    "rooms": {
+      "$room": {
+        ".read": "$room.matches(/^duel-[a-z0-9]{4}$/)",
+        ".write": "$room.matches(/^duel-[a-z0-9]{4}$/)",
+        "msgs": {
+          "$msg": {
+            ".validate": "newData.hasChildren(['k', 'f']) && newData.child('k').isString() && newData.child('k').val().length < 20"
+          }
+        }
+      }
+    }
+  }
+}

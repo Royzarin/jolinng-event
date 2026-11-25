@@ -297,8 +297,8 @@ input[type=number]{width:64px}
    Pour le changer : demande à Claude une nouvelle empreinte, ou calcule le SHA-256 du code en MAJUSCULES. */
 const ADMIN_HASH="4304aaad1fd1051e70f32259dcd2ec2dc5ecd167aa6f3eae7a6454c42ca44d0e";
 async function sha256(t){const b=await crypto.subtle.digest('SHA-256',new TextEncoder().encode(t));return [...new Uint8Array(b)].map(x=>x.toString(16).padStart(2,'0')).join('')}
-/* Lien de la cagnotte : à remplacer par le vrai lien */
-const DONATION_URL="";
+/* Lien de la cagnotte (Streamlabs Charity, équipe Birds of Prey). Pour le changer, remplace juste l'adresse entre guillemets. */
+const DONATION_URL="https://streamlabscharity.com/teams/@birds-of-prey-70/birds-of-prey-70?member=998206753910952764&l=fr-FR";
 const CAT_A="../cats/noir.webp",CAT_B="../cats/orange.webp";
 const WORDS=("maison chat soleil jardin école voiture pomme rivière montagne nuage fromage chocolat bateau oiseau fenêtre musique lampe forêt plage étoile café crayon cahier tableau vélo train avion livre table chaise bonbon gâteau poisson lapin tortue dragon château fusée planète comète trésor pirate sorcière fantôme citrouille banane cerise fraise orange carotte salade soupe pizza crêpe tarte confiture miel lait beurre farine sucre ciel neige pluie orage vent arbre fleur herbe sable caillou volcan désert océan île port phare pont route ville village quartier rue place marché piscine stade cinéma théâtre parc zoo cirque clown magicien chanteur danseur peintre dessin couleur rouge jaune bleu vert violet rose noir blanc gris pierre papier ciseaux colle feutre gomme règle trousse cartable copain famille maman papa frère soeur bébé mamie papi tonton cousin voisin facteur pompier docteur fermier vache cochon mouton cheval poule canard souris hibou renard loup ours lion tigre girafe zèbre singe baleine dauphin requin pingouin escargot papillon abeille fourmi araignée grenouille serpent clavier écran console manette jeu partie niveau bonus vitesse course victoire score record bravo super génial rapide lent vite toujours jamais souvent parfois demain hier matin midi soir nuit semaine vacances").split(' ');
 const $=s=>document.querySelector(s);
