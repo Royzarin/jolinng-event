@@ -49,29 +49,47 @@ input[type=number]{width:100px}
 .tomboBox{background:#fff7c2;border:2.5px dashed #111;border-radius:12px;padding:8px 12px;margin-top:10px}
 .tomboBox.off{opacity:.55}
 .note{font-size:16px;color:#333;line-height:1.4;margin:0}
-.topbar{width:min(100%,1100px);display:flex;justify-content:space-between;align-items:center;gap:10px}
-.topbar a,.topbar button{color:var(--ink);text-decoration:none;background:var(--paper);border:2.5px solid #111;border-radius:12px;padding:4px 14px;font-size:18px;box-shadow:3px 3px 0 #111;font-family:inherit;cursor:pointer}
-.topbar a:hover,.topbar button:hover{transform:rotate(-1.5deg)}
-.topbar .links{display:flex;gap:10px;flex-wrap:wrap}
-#musicBtn.off{opacity:.55;text-decoration:line-through}
+html,body{margin:0;height:100%;overflow:hidden;background:#0d1a26}
+body{display:block!important;padding:0!important}
+.wrap{position:fixed!important;inset:0;width:100vw!important;height:100vh;height:100dvh;max-width:none!important;display:flex;align-items:center;justify-content:center;background:#0d1a26}
+.wrap canvas{width:min(100vw,calc(100dvh*16/9))!important;height:auto;border-radius:0!important;box-shadow:none!important}
+.touch{position:fixed;left:0;right:0;bottom:12px;width:auto!important;padding:0 14px;z-index:20}
+.burger{position:fixed;left:12px;bottom:12px;z-index:40;width:52px;height:46px;border-radius:12px;background:rgba(255,251,233,.92);border:2.5px solid #111;box-shadow:3px 3px 0 #111;display:flex;flex-direction:column;justify-content:center;align-items:center;gap:5px;cursor:pointer;padding:0;opacity:.75;transition:opacity .2s}
+.burger:hover,.burger:focus-visible{opacity:1}
+.burger span{display:block;width:26px;height:3.5px;background:#111;border-radius:3px}
+.drawer{position:fixed;inset:0;z-index:45;background:rgba(0,0,0,.45);display:none}
+.drawer.on{display:block}
+.dwin{position:absolute;left:0;top:0;bottom:0;width:min(560px,94vw);overflow-y:auto;background:#12263a;border-right:3px solid #111;box-shadow:6px 0 30px rgba(0,0,0,.5);padding:16px 18px 40px;display:flex;flex-direction:column;gap:14px;color:#e8f4fb}
+.dhead{display:flex;justify-content:space-between;align-items:center}
+.dhead b{font-family:"Caveat Brush",cursive;font-weight:400;font-size:34px;color:#ffdf00;text-shadow:2px 2px 0 #111}
+.dwin a,.dwin .dbtn{color:var(--ink);text-decoration:none;background:var(--paper);border:2.5px solid #111;border-radius:12px;padding:5px 14px;font-size:18px;box-shadow:3px 3px 0 #111;font-family:inherit;cursor:pointer;display:inline-block}
+.dwin .links{display:flex;gap:10px;flex-wrap:wrap}
+.dwin .top{text-align:left;align-items:flex-start}
+.dwin .top h1{font-size:28px;margin:0}
+.dwin .keys{justify-content:flex-start;gap:10px 16px}
+.dwin .panel{width:auto!important;box-sizing:border-box}
+.dwin .panel .slots{grid-template-columns:1fr!important}
+.snd{background:var(--paper);color:var(--ink);border:2.5px solid #111;border-radius:14px;padding:10px 14px;display:grid;gap:8px;box-shadow:3px 3px 0 #111}
+.snd label{display:flex;flex-direction:column;gap:2px;font-size:17px}
+.snd input{width:100%;accent-color:#ff4d8d;border:none;box-shadow:none;padding:0}
 .panel.locked{display:none}
-.wrap,.topbar{width:min(100%,calc((100dvh - 150px)*16/9))!important;max-width:none}
-.wrap{min-width:min(100%,640px)}
-.wrap:fullscreen{width:100vw!important;height:100vh;background:#0d1a26;display:flex;align-items:center;justify-content:center}
-.wrap:fullscreen canvas{width:min(100vw,calc(100vh*16/9));height:auto;border-radius:0}
 .gear svg{width:22px;height:22px;vertical-align:-5px}
 .adm{position:fixed;inset:0;background:rgba(0,0,0,.55);display:none;align-items:center;justify-content:center;z-index:50}
 .adm.on{display:flex}
-.adm .card{background:var(--paper);border:3px solid #111;border-radius:16px;box-shadow:5px 5px 0 #111;padding:18px 22px;display:grid;gap:10px;min-width:300px;text-align:center}
+.adm .card{background:var(--paper);color:var(--ink);border:3px solid #111;border-radius:16px;box-shadow:5px 5px 0 #111;padding:18px 22px;display:grid;gap:10px;min-width:300px;text-align:center}
 .adm .card h3{margin:0;font-family:"Caveat Brush",cursive;font-weight:400;font-size:28px}
 .adm .err{color:#d11;min-height:20px;font-size:16px}
 </style>
 </head>
 <body>
-<div class="topbar">
+<button class="burger" id="burger" type="button" aria-label="Menu" title="Menu (touches, son, réglages)"><span></span><span></span><span></span></button>
+<div class="drawer" id="drawer"><div class="dwin">
+  <div class="dhead"><b>JO CITY</b><button class="dbtn" id="dClose" type="button">✕ Fermer</button></div>
   <div class="links"><a href="../../">← Accueil</a><a href="../">Les mondes</a><a href="../ville/">← Monde 1</a></div>
-  <div class="links"><button id="fsBtn" type="button">⛶ Plein écran</button><button id="musicBtn" type="button">♪ Son</button><button class="gear" id="gearBtn" type="button"></button></div>
-</div>
+  <div class="links"><button class="dbtn" id="fsBtn" type="button">⛶ Plein écran (touche F)</button><button class="dbtn gear" id="gearBtn" type="button"></button></div>
+  <div class="snd"><label>Musique : <span id="volMt"></span><input type="range" id="volM" min="0" max="100"></label><label>Effets (sauts, étoiles…) : <span id="volSt"></span><input type="range" id="volS" min="0" max="100"></label></div>
+  <div id="dSlot"></div>
+</div></div>
 <div class="top">
   <h1>Jo City · Monde 2 : Le pire stream</h1>
   <p>Lynn doit acheter tout son setup de streameuse puis lancer son live. Chaque achat se paie avec les dons du chat. Clique sur le jeu puis joue au clavier.</p>
@@ -668,7 +686,7 @@ function drawHero(cx,by,face,run,air,t,speed){
     else if(moving){k='walk';f=Math.floor(run*.55)%SPR.walk.n}
     else{k='idle';f=Math.floor(t/6)%SPR.idle.n}
     const s=SPR[k];s.w=s.im.naturalWidth/s.n;s.h=s.im.naturalHeight;const dw=s.w/2,dh=s.h/2;
-    const fl=(heroSkin==='lynn'&&(k==='up'||k==='air'||k==='down'))?-1:1;/* le saut de Lynn est dessiné dans l'autre sens */
+    const fl=(heroSkin==='lynn'&&k!=='walk')?-1:1;/* l'arrêt et le saut de Lynn sont dessinés dans l'autre sens */
     ctx.save();ctx.translate(cx,by+2);ctx.scale(face*fl,1);ctx.drawImage(s.im,f*s.w,0,s.w,s.h,-dw/2,-dh,dw,dh);ctx.restore();return;
   }
   if(CAT_HERO.complete&&CAT_HERO.naturalWidth){
@@ -1261,17 +1279,32 @@ setTimeout(boot,2500);
   show(unlocked);
   async function sha(t){const b=await crypto.subtle.digest('SHA-256',new TextEncoder().encode(t));return [...new Uint8Array(b)].map(x=>x.toString(16).padStart(2,'0')).join('')}
   gear.onclick=()=>{if(unlocked&&!panel.classList.contains('locked')){show(false);return}if(unlocked){show(true);return}err.textContent='';code.value='';adm.classList.add('on');setTimeout(()=>code.focus(),50)};
-  const ok=async()=>{if(await sha(code.value.trim().toUpperCase())!==HASH){err.textContent='Code incorrect.';return}unlocked=true;try{localStorage.setItem(KEY,'1')}catch(e){}adm.classList.remove('on');show(true);panel.scrollIntoView({behavior:'smooth'})};
-  const mb=document.getElementById('musicBtn');if(window.ChillMusic)ChillMusic.attachPanel(mb,[{label:'Effets (sauts, étoiles…)',get:()=>SFX.vol,set:v=>SFX.setVol(v)}]);else mb.style.display='none';
+  const ok=async()=>{if(await sha(code.value.trim().toUpperCase())!==HASH){err.textContent='Code incorrect.';return}unlocked=true;try{localStorage.setItem(KEY,'1')}catch(e){}adm.classList.remove('on');show(true);setTimeout(()=>panel.scrollIntoView({behavior:'smooth'}),50)};
+  /* menu ☰ : on y range le titre, les touches et les réglages */
+  const drawer=document.getElementById('drawer'),slot=document.getElementById('dSlot');
+  ['.top','.keys','.panel'].forEach(q=>{const el=document.querySelector(q);if(el)slot.appendChild(el)});
+  const cvs=document.getElementById('game');
+  const openD=()=>{drawer.classList.add('on')},closeD=()=>{drawer.classList.remove('on');cvs.focus({preventScroll:true})};
+  document.getElementById('burger').onclick=e=>{e.stopPropagation();drawer.classList.contains('on')?closeD():openD()};
+  document.getElementById('dClose').onclick=closeD;drawer.addEventListener('pointerdown',e=>{if(e.target===drawer)closeD()});
+  addEventListener('keydown',e=>{if(e.key==='Escape'&&drawer.classList.contains('on')&&!document.fullscreenElement){closeD()}});
+  drawer.addEventListener('keydown',e=>{if(e.target.tagName==='INPUT'||e.target.tagName==='SELECT')e.stopPropagation()});
+  /* son : deux curseurs */
+  const vm=document.getElementById('volM'),vs=document.getElementById('volS'),lm=document.getElementById('volMt'),ls=document.getElementById('volSt');
+  const updV=()=>{const m=window.ChillMusic?Math.round((ChillMusic.on?ChillMusic.volume:0)*100):0,f=Math.round(SFX.vol*100);vm.value=m;vs.value=f;lm.textContent=m+' %';ls.textContent=f+' %'};updV();
+  vm.oninput=()=>{if(window.ChillMusic)ChillMusic.setVolume(vm.value/100);lm.textContent=vm.value+' %'};vs.oninput=()=>{SFX.setVol(vs.value/100);ls.textContent=vs.value+' %'};
   /* plein écran : bouton ou touche F */
-  const wrap=document.querySelector('.wrap'),fs=document.getElementById('fsBtn');
-  const toggleFs=()=>{if(document.fullscreenElement)document.exitFullscreen();else if(wrap.requestFullscreen)wrap.requestFullscreen().then(()=>document.getElementById('game').focus({preventScroll:true})).catch(()=>{})};
-  fs.onclick=toggleFs;addEventListener('keydown',e=>{if((e.key==='f'||e.key==='F')&&!e.ctrlKey&&!e.metaKey&&!(e.target&&e.target.tagName==='INPUT'))toggleFs()});
-  if(!document.fullscreenEnabled&&!wrap.requestFullscreen)fs.style.display='none';
+  const fs=document.getElementById('fsBtn');
+  const toggleFs=()=>{if(document.fullscreenElement)document.exitFullscreen();else if(document.documentElement.requestFullscreen)document.documentElement.requestFullscreen().then(()=>cvs.focus({preventScroll:true})).catch(()=>{})};
+  fs.onclick=()=>{toggleFs();closeD()};addEventListener('keydown',e=>{if((e.key==='f'||e.key==='F')&&!e.ctrlKey&&!e.metaKey&&!(e.target&&/INPUT|SELECT|TEXTAREA/.test(e.target.tagName)))toggleFs()});
+  if(!document.fullscreenEnabled)fs.style.display='none';
   document.getElementById('admOk').onclick=ok;document.getElementById('admNo').onclick=()=>adm.classList.remove('on');
   code.addEventListener('keydown',e=>{e.stopPropagation();if(e.key==='Enter')ok();if(e.key==='Escape')adm.classList.remove('on')});
   code.addEventListener('keyup',e=>e.stopPropagation());
 })();
 </script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-database-compat.js"></script>
+<script src="../mp.js"></script>
 </body>
 </html>

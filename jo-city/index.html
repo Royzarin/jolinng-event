@@ -38,6 +38,15 @@ footer{position:absolute;bottom:10px;left:50%;transform:translateX(-50%);z-index
 .back{position:fixed;top:14px;left:14px;z-index:3;font-size:20px;color:var(--ink);text-decoration:none;padding:6px 16px;isolation:isolate}
 .back::before{content:"";position:absolute;inset:0;z-index:-1;background:#fff;border:3px solid var(--ink);border-radius:14px 18px 12px 16px;filter:url(#crayon);box-shadow:3px 3px 0 var(--ink)}
 .game .ico{width:130px;height:90px}
+.join{flex-basis:100%;max-width:760px}
+.join form{display:grid;gap:10px;width:100%;text-align:left}
+.join input{font-family:inherit;font-size:20px;padding:6px 12px;border:2.5px solid #111;border-radius:10px;width:100%;box-sizing:border-box}
+.join .cats2{display:flex;gap:10px;flex-wrap:wrap;justify-content:center}
+.catpick{width:74px;height:74px;border:3px solid #111;border-radius:14px;background:#fff no-repeat 0 50%;background-size:6000% auto;cursor:pointer;box-shadow:3px 3px 0 #111}
+.catpick.on{background-color:#ffdf00;transform:rotate(-4deg) scale(1.06)}
+.join .go{justify-self:center;font-family:inherit;font-size:22px;padding:6px 26px;border:3px solid #111;border-radius:14px;background:#ffdf00;box-shadow:3px 3px 0 #111;cursor:pointer}
+.join .err{min-height:22px;color:#d11;text-align:center;font-size:17px}
+.join .two{display:grid;grid-template-columns:2fr 1fr;gap:10px}
 </style>
 </head>
 <body>
@@ -86,9 +95,28 @@ footer{position:absolute;bottom:10px;left:50%;transform:translateX(-50%);z-index
     <p>Clavier, carte graphique à 5 000 €, micro banane, ring light aveuglante… Lynn arrivera-t-elle à lancer son live ?</p>
     <span class="tag">Jouer</span>
   </a>
+  <div class="game box join" id="join">
+    <h2>Rejoindre la partie de Lynn</h2>
+    <p>Le code est affiché en bas à droite du jeu, sur le live. Choisis ton chat !</p>
+    <form id="joinForm" autocomplete="off">
+      <div class="two"><input id="jName" maxlength="16" placeholder="Ton pseudo"><input id="jCode" maxlength="4" placeholder="Code" style="text-transform:uppercase;text-align:center"></div>
+      <div class="cats2">
+        <button type="button" class="catpick on" data-cat="orange" title="Orange" style="background-image:url(cats/viewers/orange_idle.png)"></button>
+        <button type="button" class="catpick" data-cat="bleu" title="Bleu" style="background-image:url(cats/viewers/bleu_idle.png)"></button>
+        <button type="button" class="catpick" data-cat="blanc" title="Blanc" style="background-image:url(cats/viewers/blanc_idle.png)"></button>
+        <button type="button" class="catpick" data-cat="rose" title="Rose" style="background-image:url(cats/viewers/rose_idle.png)"></button>
+        <button type="button" class="catpick" data-cat="vert" title="Vert" style="background-image:url(cats/viewers/vert_idle.png)"></button>
+      </div>
+      <button class="go" type="submit">Rejoindre</button>
+      <div class="err" id="jErr"></div>
+    </form>
+  </div>
 </main>
 
 <div class="cats" aria-hidden="true"><img src="../cats/noir.webp" alt=""><img src="../cats/orange.webp" alt=""></div>
 <footer>JoLinng Event · tous les dons vont à l'asso</footer>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-database-compat.js"></script>
+<script src="mp.js"></script>
 </body>
 </html>
