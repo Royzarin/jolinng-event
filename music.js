@@ -4,7 +4,8 @@
    Elle démarre au premier clic ou à la première touche (règle des navigateurs). */
 (function(){
   const KEY='jolinngMusic';
-  let on=true;try{on=localStorage.getItem(KEY)!=='0'}catch(e){}
+  let on=true,vol=.6;try{on=localStorage.getItem(KEY)!=='0';const v=localStorage.getItem(KEY+'Vol');if(v!==null&&!isNaN(+v))vol=Math.max(0,Math.min(1,+v))}catch(e){}
+  const level=()=>vol*.9;
   let ac=null,master=null,timer=null,nextT=0,step=0,loop=0,noiseBuf=null;
   const BPM=88,S16=60/BPM/4,AHEAD=.25;
   const mtof=m=>440*Math.pow(2,(m-69)/12);
@@ -56,7 +57,7 @@
     if(!init())return;if(ac.state==='suspended')ac.resume();
     if(timer)return;
     nextT=ac.currentTime+.08;step=0;
-    master.gain.cancelScheduledValues(ac.currentTime);master.gain.setValueAtTime(master.gain.value,ac.currentTime);master.gain.linearRampToValueAtTime(.55,ac.currentTime+1.5);
+    master.gain.cancelScheduledValues(ac.currentTime);master.gain.setValueAtTime(master.gain.value,ac.currentTime);master.gain.linearRampToValueAtTime(level(),ac.currentTime+1.5);
     timer=setInterval(pump,40);pump();
   }
   function pause(){
@@ -69,6 +70,25 @@
   window.ChillMusic={
     get on(){return on},
     set(v){on=!!v;try{localStorage.setItem(KEY,on?'1':'0')}catch(e){}on?play():pause();document.dispatchEvent(new CustomEvent('chillmusic',{detail:on}))},
-    toggle(){this.set(!on);return on}
+    toggle(){this.set(!on);return on},
+    get volume(){return vol},
+    setVolume(v){vol=Math.max(0,Math.min(1,+v||0));try{localStorage.setItem(KEY+'Vol',String(vol))}catch(e){}
+      if(vol>0&&!on){this.set(true);return}if(vol===0&&on){this.set(false);return}
+      if(ac&&timer){master.gain.cancelScheduledValues(ac.currentTime);master.gain.setValueAtTime(master.gain.value,ac.currentTime);master.gain.linearRampToValueAtTime(level(),ac.currentTime+.15)}},
+    /* petit panneau de réglage du volume, attaché à un bouton. extra = [{label,get,set}] pour d'autres curseurs (effets…) */
+    attachPanel(btn,extra){
+      const st=document.createElement('style');st.textContent='.cmPanel{position:fixed;z-index:60;background:#fffbe9;border:3px solid #111;border-radius:14px;box-shadow:4px 4px 0 #111;padding:10px 14px;display:none;gap:8px;flex-direction:column;font-family:"Gochi Hand","Comic Sans MS",cursive;font-size:17px;color:#111;min-width:220px}.cmPanel.on{display:flex}.cmPanel label{display:flex;flex-direction:column;gap:2px}.cmPanel input[type=range]{width:100%;accent-color:#ff4d8d;cursor:pointer;border:none;padding:0;box-shadow:none}';document.head.appendChild(st);
+      const pn=document.createElement('div');pn.className='cmPanel';document.body.appendChild(pn);
+      const rows=[{label:'Musique',get:()=>on?vol:0,set:v=>this.setVolume(v)}].concat(extra||[]);
+      rows.forEach(r=>{const l=document.createElement('label');const t=document.createElement('span');const i=document.createElement('input');i.type='range';i.min=0;i.max=100;i.step=1;
+        const upd=()=>{i.value=Math.round(r.get()*100);t.textContent=`${r.label} : ${i.value} %`};upd();r.upd=upd;
+        i.oninput=()=>{r.set(i.value/100);t.textContent=`${r.label} : ${i.value} %`};i.addEventListener('keydown',e=>e.stopPropagation());l.append(t,i);pn.appendChild(l)});
+      const place=()=>{const b=btn.getBoundingClientRect();pn.style.top=(b.bottom+8)+'px';pn.style.left=Math.max(8,Math.min(innerWidth-pn.offsetWidth-8,b.right-pn.offsetWidth))+'px'};
+      btn.addEventListener('click',e=>{e.stopPropagation();pn.classList.toggle('on');rows.forEach(r=>r.upd());if(pn.classList.contains('on'))place();btn.classList.toggle('off',!on)});
+      pn.addEventListener('click',e=>e.stopPropagation());pn.addEventListener('pointerdown',e=>e.stopPropagation());
+      document.addEventListener('click',()=>pn.classList.remove('on'));addEventListener('resize',()=>pn.classList.remove('on'));
+      document.addEventListener('chillmusic',()=>btn.classList.toggle('off',!on));btn.classList.toggle('off',!on);
+      return pn;
+    }
   };
 })();

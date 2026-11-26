@@ -326,12 +326,12 @@ let toastT;function toast(t){const el=$('#toast');el.textContent=t;el.classList.
 
 /* ============ Sons (générés, pas de fichier) ============ */
 const sfx=(()=>{
-  let ac=null,muted=false;try{muted=localStorage.getItem('duelMute')==='1'}catch(e){}
+  let ac=null,muted=false,SV=.8;try{muted=localStorage.getItem('duelMute')==='1';const v=localStorage.getItem('jolinngSfxVol');if(v!==null&&!isNaN(+v))SV=Math.max(0,Math.min(1,+v))}catch(e){}
   const ctx=()=>{if(!ac){try{ac=new (window.AudioContext||window.webkitAudioContext)()}catch(e){return null}}if(ac.state==='suspended')ac.resume();return ac};
   let noiseBuf=null;
   function noise(c){if(noiseBuf)return noiseBuf;const b=c.createBuffer(1,c.sampleRate*.2,c.sampleRate),d=b.getChannelData(0);for(let i=0;i<d.length;i++)d[i]=Math.random()*2-1;return noiseBuf=b}
-  function tone(f,dur,type='square',vol=.12,when=0,slide=0){const c=ctx();if(!c||muted)return;const t=c.currentTime+when,o=c.createOscillator(),g=c.createGain();o.type=type;o.frequency.setValueAtTime(f,t);if(slide)o.frequency.exponentialRampToValueAtTime(slide,t+dur);g.gain.setValueAtTime(vol,t);g.gain.exponentialRampToValueAtTime(.0001,t+dur);o.connect(g).connect(c.destination);o.start(t);o.stop(t+dur+.02)}
-  function scratch(freq,dur,vol){const c=ctx();if(!c||muted)return;const t=c.currentTime,src=c.createBufferSource(),f=c.createBiquadFilter(),g=c.createGain();src.buffer=noise(c);f.type='bandpass';f.frequency.value=freq;f.Q.value=1.4;g.gain.setValueAtTime(vol,t);g.gain.exponentialRampToValueAtTime(.0001,t+dur);src.connect(f).connect(g).connect(c.destination);src.start(t,Math.random()*.1);src.stop(t+dur+.02)}
+  function tone(f,dur,type='square',vol=.12,when=0,slide=0){const c=ctx();if(!c||muted)return;const t=c.currentTime+when,o=c.createOscillator(),g=c.createGain();o.type=type;o.frequency.setValueAtTime(f,t);if(slide)o.frequency.exponentialRampToValueAtTime(slide,t+dur);g.gain.setValueAtTime(Math.max(.0001,vol*SV),t);g.gain.exponentialRampToValueAtTime(.0001,t+dur);o.connect(g).connect(c.destination);o.start(t);o.stop(t+dur+.02)}
+  function scratch(freq,dur,vol){const c=ctx();if(!c||muted)return;const t=c.currentTime,src=c.createBufferSource(),f=c.createBiquadFilter(),g=c.createGain();src.buffer=noise(c);f.type='bandpass';f.frequency.value=freq;f.Q.value=1.4;g.gain.setValueAtTime(Math.max(.0001,vol*SV),t);g.gain.exponentialRampToValueAtTime(.0001,t+dur);src.connect(f).connect(g).connect(c.destination);src.start(t,Math.random()*.1);src.stop(t+dur+.02)}
   return{
     unlock:()=>ctx(),
     key:()=>scratch(2600+Math.random()*1800,.045,.35),          // coup de crayon à chaque touche
@@ -345,7 +345,9 @@ const sfx=(()=>{
     win:()=>[523,659,784,1047].forEach((f,i)=>tone(f,.22,'triangle',.13,i*.12)),
     lose:()=>[392,370,349,262].forEach((f,i)=>tone(f,.3,'sawtooth',.06,i*.22)),
     toggle(){muted=!muted;try{localStorage.setItem('duelMute',muted?'1':'0')}catch(e){}return muted},
-    get muted(){return muted}
+    get muted(){return muted},
+    get vol(){return SV},
+    setVol(v){SV=Math.max(0,Math.min(1,+v||0));try{localStorage.setItem('jolinngSfxVol',String(SV))}catch(e){}}
   };
 })();
 document.addEventListener('pointerdown',()=>sfx.unlock(),{once:true});
@@ -356,7 +358,7 @@ $('#gearBtn').onclick=e=>{e.stopPropagation();$('#settings').classList.toggle('o
 $('#closeSet').onclick=closeSettings;
 $('#settings').addEventListener('click',e=>{if(e.target.id==='settings')closeSettings()});
 $('#muteBtn').onclick=e=>{e.stopPropagation();$('#muteBtn').classList.toggle('off',sfx.toggle())};
-if(window.ChillMusic){$('#musicBtn').classList.toggle('off',!ChillMusic.on);$('#musicBtn').onclick=e=>{e.stopPropagation();$('#musicBtn').classList.toggle('off',!ChillMusic.toggle())}}else $('#musicBtn').style.display='none';
+if(window.ChillMusic)ChillMusic.attachPanel($('#musicBtn'),[{label:'Effets',get:()=>sfx.vol,set:v=>sfx.setVol(v)}]);else $('#musicBtn').style.display='none';
 
 /* ============ État ============ */
 // mode : 'solo' (contre l'ordi), 'host' (streameuse), 'guest' (viewer)

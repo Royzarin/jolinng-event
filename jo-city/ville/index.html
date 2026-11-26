@@ -55,6 +55,10 @@ input[type=number]{width:100px}
 .topbar .links{display:flex;gap:10px;flex-wrap:wrap}
 #musicBtn.off{opacity:.55;text-decoration:line-through}
 .panel.locked{display:none}
+.wrap,.topbar{width:min(100%,calc((100dvh - 150px)*16/9))!important;max-width:none}
+.wrap{min-width:min(100%,640px)}
+.wrap:fullscreen{width:100vw!important;height:100vh;background:#0d1a26;display:flex;align-items:center;justify-content:center}
+.wrap:fullscreen canvas{width:min(100vw,calc(100vh*16/9));height:auto;border-radius:0}
 .gear svg{width:22px;height:22px;vertical-align:-5px}
 .adm{position:fixed;inset:0;background:rgba(0,0,0,.55);display:none;align-items:center;justify-content:center;z-index:50}
 .adm.on{display:flex}
@@ -66,7 +70,7 @@ input[type=number]{width:100px}
 <body>
 <div class="topbar">
   <div class="links"><a href="../../">← Accueil</a><a href="../">Les mondes</a><a href="../pire-stream/">Monde 2 →</a></div>
-  <div class="links"><button id="musicBtn" type="button">♪ Musique</button><button class="gear" id="gearBtn" type="button"></button></div>
+  <div class="links"><button id="fsBtn" type="button">⛶ Plein écran</button><button id="musicBtn" type="button">♪ Son</button><button class="gear" id="gearBtn" type="button"></button></div>
 </div>
 <div class="top">
   <h1>Jo City · Monde 1 : La ville</h1>
@@ -87,15 +91,19 @@ input[type=number]{width:100px}
 
 <div class="panel locked">
   <div class="slbox">
-    <h3>Dons en direct (Streamlabs Charity)</h3>
+    <div class="row" style="justify-content:space-between"><h3 style="margin:0">Dons en direct (Streamlabs Charity)</h3>
+      <span class="row"><span id="slDot" class="sldot"></span><span id="slState">Non connecté</span>
+      <span id="slLock" class="row"><input id="slPin" type="password" inputmode="numeric" maxlength="4" placeholder="Code" style="width:90px" autocomplete="off"><button id="slShow">Afficher</button></span>
+      <button id="slHide" style="display:none">Cacher</button></span></div>
+    <div id="slInner" style="display:none;margin-top:8px">
     <div class="row">
       <input id="slTok" type="password" autocomplete="off" spellcheck="false" placeholder="Colle ton token Socket API" style="width:300px">
       <button class="don" id="slGo">Lancer la session</button>
       <button id="slStop">Arrêter</button>
       <button id="slForget">Effacer le token</button>
-      <span id="slDot" class="sldot"></span><span id="slState">Non connecté</span>
     </div>
-    <p class="note" style="margin:6px 0 0">Le token se trouve sur streamlabs.com : Paramètres, API Settings, onglet API Tokens, « Your Socket API Token ». Il reste uniquement dans ce navigateur (rien n'est envoyé ailleurs qu'à Streamlabs). Ne l'affiche jamais en live : dans OBS, ne capture que le jeu. Seuls les dons reçus après « Lancer la session » comptent ; les alertes de test de Streamlabs comptent aussi, pratique pour vérifier avant le live.</p>
+    <p class="note" style="margin:6px 0 0">Le token se trouve sur streamlabs.com : Paramètres, API Settings, onglet API Tokens, « Your Socket API Token ». Il reste uniquement dans ce navigateur (rien n'est envoyé ailleurs qu'à Streamlabs). Ne l'affiche jamais en live : dans OBS, ne capture que le jeu. Seuls les dons reçus après « Lancer la session » comptent ; les alertes de test de Streamlabs comptent aussi, pratique pour vérifier avant le live. Le bouton « Cacher » remet ce cadre à l'abri.</p>
+    </div>
   </div>
   <div>
     <h3>Ajouter un don à la main (test ou secours)</h3>
@@ -365,7 +373,7 @@ const secretGate=g=>g.type==='motor'&&!g.done&&!(M('boat')&&M('boat').broken);
 function donate(amount,who){
   if(!(amount>0))return;
   game.total=Math.round((game.total+amount)*100)/100;
-  game.alert={who,amount};game.alertT=200;
+  game.alert={who,amount};game.alertT=200;SFX.coin();
   if(who){const k=String(who).trim();if(k)game.donors[k]=(game.donors[k]||0)+1}
   let rest=amount;
   for(const g of gates){
@@ -375,7 +383,7 @@ function donate(amount,who){
     if(rest<=0.0001)break;
   }
 }
-function unlock(g,who){
+function unlock(g,who){SFX.tier();
   g.done=true;
   if(g.type!=='villain'){
     const bus=M('bus'),lift=M('lift'),boat=M('boat'),chair=M('chair');let x=g.x,y=g.ground-80,msg='';
@@ -406,16 +414,16 @@ function hint(t){if(game.hintT<=0){toast(t);game.hintT=150}}
 /* ================= Missiles ================= */
 function groundAt(x,fromY){let best=H+40;for(const r of solids){if(r.dead||r.kind==='gate'||r.kind==='wall'||r.kind==='fire')continue;if(x>=r.x&&x<=r.x+r.w&&r.y>=fromY-2&&r.y<best)best=r.y}
   for(const m of movers){if(x>=m.x&&x<=m.x+m.w&&m.y>=fromY-2&&m.y<best)best=m.y}return best}
-function spawnMissile(){
+function spawnMissile(){SFX.warn();
   /* vise la zone où se trouvent les joueurs (ici Lynn ; en multijoueur, un joueur au hasard) avec un petit décalage */
   const tx=P.x+P.w/2+(Math.random()-.5)*120;
   missiles.push({x:tx,gy:groundAt(tx,P.y),r:62,t:0,boom:0});
 }
 function loseLife(force){
   if((P.inv>0&&!force)||game.win||game.lost)return;
-  game.lives--;P.inv=90;cam.shake=14;P.vy=-8;
+  game.lives--;P.inv=90;SFX.hurt();cam.shake=14;P.vy=-8;
   texts.push({x:P.x+P.w/2,y:P.y-20,t:'-1 VIE',life:70,big:true});
-  if(game.lives<=0){game.lives=0;game.lost=true;game.lostWhy='lives';game.lostT=0;toast("Lynn n'a plus de vies ! Appuie sur R pour réessayer.")}
+  if(game.lives<=0){game.lives=0;game.lost=true;game.lostWhy='lives';SFX.lose();game.lostT=0;toast("Lynn n'a plus de vies ! Appuie sur R pour réessayer.")}
   else toast(`Aïe ! Plus que ${game.lives} vie${game.lives>1?'s':''}.`);
 }
 function updateMissiles(){
@@ -423,7 +431,7 @@ function updateMissiles(){
   if(L.missileEvery>0&&!game.win){if(--game.nextMissile<=0){spawnMissile();game.nextMissile=L.missileEvery*60}}
   for(const m of missiles){
     m.t++;
-    if(m.t===WARN){m.boom=1;cam.shake=Math.max(cam.shake,9);burst(m.x,m.gy-10,40);
+    if(m.t===WARN){m.boom=1;SFX.boom();cam.shake=Math.max(cam.shake,9);burst(m.x,m.gy-10,40);
       const cx=P.x+P.w/2,cy=P.y+P.h;if(Math.abs(cx-m.x)<m.r&&cy>m.gy-90&&cy<=m.gy+20)loseLife()}
     if(m.boom)m.boom++;
   }
@@ -478,11 +486,11 @@ function step(){
   {const st=STAGES[game.stage];
    if(st&&st.gates.every(i=>gates[i].done)){
      game.stage++;const nx=STAGES[game.stage];
-     if(nx){const ns=stageSecs(game.stage);game.left+=ns*60;const m=Math.floor(ns/60),sec=String(ns%60).padStart(2,'0');toast(`Manche réussie ! +${m}:${sec} au chrono`);texts.push({x:cam.x+W/2,y:150,t:'+'+m+':'+sec,life:90,big:true})}
+     if(nx){const ns=stageSecs(game.stage);game.left+=ns*60;const m=Math.floor(ns/60),sec=String(ns%60).padStart(2,'0');SFX.flag();toast(`Manche réussie ! +${m}:${sec} au chrono`);texts.push({x:cam.x+W/2,y:150,t:'+'+m+':'+sec,life:90,big:true})}
    }
    updateMissiles();
    if(game.lost)return;
-   if(STAGES[game.stage]){game.left--;if(game.left<=0){game.left=0;game.lost=true;game.lostWhy='time';game.lostT=0;cam.shake=10;toast('Temps écoulé ! Appuie sur R pour réessayer.')}}}
+   if(STAGES[game.stage]){game.left--;if(game.left<=0){game.left=0;game.lost=true;game.lostWhy='time';SFX.lose();game.lostT=0;cam.shake=10;toast('Temps écoulé ! Appuie sur R pour réessayer.')}}}
   // chasse-neige : Lynn monte dedans et conduit jusqu'à dégager le mur
   if(plow.state==='parked'&&P.onG&&P.x+P.w>plow.x+20&&P.x<plow.x+200&&Math.abs(P.y+P.h-GY)<4){plow.state='driving';plow.t=0;puff(P.x+P.w/2,P.y,12,'#fff');toast('Lynn prend le volant du chasse-neige !')}
   if(plow.state==='driving'){
@@ -511,7 +519,7 @@ function step(){
   P.vx=clamp(P.vx,-PH.max,PH.max);if(Math.abs(P.vx)<.05)P.vx=0;
   if(jumpPressed)P.buf=8;jumpPressed=false;
   if(P.onG)P.coyote=7;else if(P.coyote>0)P.coyote--;
-  if(P.buf>0){P.buf--;if(P.coyote>0){P.vy=-12.6;P.coyote=0;P.buf=0;P.onG=false;P.gref=null;puff(P.x+P.w/2,P.y+P.h,6)}}
+  if(P.buf>0){P.buf--;if(P.coyote>0){SFX.jump();P.vy=-12.6;P.coyote=0;P.buf=0;P.onG=false;P.gref=null;puff(P.x+P.w/2,P.y+P.h,6)}}
   if(!keys.jump&&P.vy<-4.5)P.vy=-4.5;
   P.vy=Math.min(P.vy+.6,14);
   const cols=solids.filter(r=>!r.dead);
@@ -527,7 +535,7 @@ function step(){
     if(P.vy>=0&&P.x+P.w>m.x+2&&P.x<m.x+m.w-2&&prevB<=m.y+8&&P.y+P.h>=m.y){P.y=m.y-P.h;P.vy=0;P.onG=true;P.gref=m;if(!wasG)puff(P.x+P.w/2,P.y+P.h,4)}
   }
   for(const r of cols){if(overlap(P,r)){
-    if(r.kind==='mushroom'&&P.vy>0){P.y=r.y-P.h;P.vy=-17;r.squash=12;puff(P.x+P.w/2,r.y,8,'#ff2a2a');continue}
+    if(r.kind==='mushroom'&&P.vy>0){P.y=r.y-P.h;P.vy=-17;r.squash=12;SFX.boing();puff(P.x+P.w/2,r.y,8,'#ff2a2a');continue}
     if(P.vy>0||P.gref&&movers.includes(P.gref)){P.y=r.y-P.h;P.vy=0;P.onG=true;if(!P.gref)P.gref=r;if(!wasG)puff(P.x+P.w/2,P.y+P.h,4)}
     else if(P.vy<0){P.y=r.y+r.h;P.vy=0}}}
   if(P.inv>0)P.inv--;
@@ -537,19 +545,19 @@ function step(){
     if(!e.alive){e.die++;continue}
     e.x+=e.vx;if(e.x<e.a||e.x>e.b)e.vx*=-1;
     if(overlap(P,e)){
-      if(P.vy>0&&P.y+P.h-P.vy<=e.y+10){e.alive=false;P.vy=-9;toast('Bien joué ! Sbire écrasé.');burst(e.x+15,e.y+15,18);texts.push({x:e.x+15,y:e.y-10,t:'PAF !',life:45})}
+      if(P.vy>0&&P.y+P.h-P.vy<=e.y+10){e.alive=false;P.vy=-9;SFX.stomp();toast('Bien joué ! Sbire écrasé.');burst(e.x+15,e.y+15,18);texts.push({x:e.x+15,y:e.y-10,t:'PAF !',life:45})}
       else hurt(P.x+P.w/2<e.x+e.w/2?-1:1,null);
     }
   }
   // cœurs et objets
-  for(const h of hearts)if(!h.got&&Math.abs(P.x+P.w/2-h.x)<22&&Math.abs(P.y+P.h/2-h.y)<34){h.got=true;game.hearts++;puff(h.x,h.y,8,'#ffdf00')}
+  for(const h of hearts)if(!h.got&&Math.abs(P.x+P.w/2-h.x)<22&&Math.abs(P.y+P.h/2-h.y)<34){h.got=true;game.hearts++;SFX.star();puff(h.x,h.y,8,'#ffdf00')}
   for(const it of items)if(!it.taken&&it.locked&&overlap(P,it))hint(it.kind==='ext'?`L'extincteur est sous clé : il faut ${fmt(stepLeft('ext'))} de dons pour l'ouvrir.`:`Le souffleur est sous clé : il faut ${fmt(stepLeft('blower'))} de dons pour l'ouvrir.`);
   for(const it of items)if(!it.taken&&!it.locked&&overlap(P,it)){it.taken=true;
     if(it.kind==='ext'){P.ext=true;P.blower=false;texts.push({x:it.x,y:it.y-10,t:'EXTINCTEUR !',life:70});toast("Extincteur récupéré ! Va éteindre l'incendie avec E.")}
     else{P.blower=true;P.ext=false;texts.push({x:it.x,y:it.y-10,t:'SOUFFLEUR !',life:70});toast('Souffleur récupéré ! Maintiens E devant le tas de feuilles.')}}
   // extincteur
   P.spray=P.ext&&keys.act;
-  if(P.spray){
+  if(P.spray){if(game.t%8===0)SFX.spray();
     const nx=P.face>0?P.x+P.w:P.x;
     for(let i=0;i<3;i++)particles.push({x:nx,y:P.y+24,vx:P.face*(6+Math.random()*4),vy:(Math.random()-.6)*2.5,g:.05,life:28,c:'rgba(235,245,255,.9)',s:5+Math.random()*6,fade:true});
     if(fire.alive){const d=P.face>0?fire.x-(P.x+P.w):P.x-(fire.x+fire.w);
@@ -558,7 +566,7 @@ function step(){
   }else if(keys.act&&!P.ext&&!P.blower&&zoneAt(P.x)===0)hint("Il te faut l'extincteur, il est sur une caisse avant l'incendie !");
   // souffleur à feuilles
   P.blowing=P.blower&&keys.act;
-  if(P.blowing){
+  if(P.blowing){if(game.t%8===0)SFX.spray();
     const nx=P.face>0?P.x+P.w+20:P.x-20;
     for(let i=0;i<2;i++)particles.push({x:nx,y:P.y+26+(Math.random()-.5)*10,vx:P.face*(7+Math.random()*4),vy:(Math.random()-.5)*1.5,g:0,life:22,c:'rgba(255,255,255,.85)',s:3+Math.random()*3,fade:true});
     if(leafPile&&!leafPile.dead){const d=P.face>0?leafPile.x-(P.x+P.w):P.x-(leafPile.x+leafPile.w);
@@ -583,7 +591,7 @@ function step(){
      {bt.broken=true;toast(`Le moteur est cassé ! Il faut ${fmt(mg.cost-mg.filled)} de dons pour le réparer.`)}}
    if(bt.broken&&P.gref===bt)hint(`Moteur en panne : il faut ${fmt(mg.cost-mg.filled)} de dons pour le réparer.`);}
   // drapeaux
-  checkpoints.forEach((c,i)=>{if(!c.on&&P.x>c.x-10&&P.onG&&Math.abs(P.y+P.h-c.y)<4){c.on=true;P.cp=i;puff(c.x,c.y-60,14,'#3ddc84')}});
+  checkpoints.forEach((c,i)=>{if(!c.on&&P.x>c.x-10&&P.onG&&Math.abs(P.y+P.h-c.y)<4){c.on=true;P.cp=i;SFX.flag();puff(c.x,c.y-60,14,'#3ddc84')}});
   // chutes
   if(P.x>2450&&P.x<3250&&P.y+P.h>475)respawn("Attention aux voitures ! Prends le bus en marche.");
   if(P.x+P.w/2>canal.x0&&P.x+P.w/2<canal.x1&&P.y+P.h>478)respawn("Plouf ! Prends la barque pour traverser.");
@@ -966,7 +974,7 @@ function drawCloud(x,y,s){ol(3);ctx.save();ctx.translate(x,y);ctx.scale(s,s);ctx
 
 /* ================= Célébration : bulle de BD + papiers ================= */
 let celeb={bub:null,papers:[]};
-function celebrate(word){
+function celebrate(word){SFX.win();
   for(let i=0;i<18;i++){const L=Math.random()<.5;celeb.papers.push({k:Math.random()<.65?'ball':'plane',x:L?-40-Math.random()*60:W+40+Math.random()*60,y:20+Math.random()*H*.6,vx:(L?1:-1)*(3+Math.random()*4),vy:-Math.random()*3,rot:0,vr:(Math.random()-.5)*.24,r:10+Math.random()*10,born:5+i*3,age:0,life:140})}
   celeb.bub={t:0,word:word||pick(['MIAOU !','BRAVO !','POW !'])};
 }
@@ -1054,10 +1062,10 @@ function drawHUD(t){
   }
   if(!game.started){
     ctx.fillStyle='rgba(1,209,255,.6)';ctx.fillRect(0,0,W,H);
-    comic('JO CITY',W/2,H/2-40,96,'#ffdf00');
-    ctx.font='24px '+HAND;ctx.fillStyle=INK;ctx.fillText('Clique ici puis appuie sur une flèche pour commencer',W/2,H/2+18);
-    ctx.font='19px '+HAND;ctx.fillStyle=INK;ctx.fillText('Chaque obstacle se débloque grâce aux dons du chat !',W/2,H/2+48);
-    if(TOMBO.on){ctx.save();ctx.translate(W/2,H/2+92);ctx.rotate(-.02);ctx.font='20px '+HAND;const tt='Tombola activée : 1 don = 1 ticket'+(TOMBO.lot?' · '+TOMBO.lot:''),tw=ctx.measureText(tt).width+40;panel(-tw/2,-20,tw,36,'#ffdf00');ctx.textAlign='center';ctx.fillStyle=INK;ctx.fillText('Tombola activée : 1 don = 1 ticket'+(TOMBO.lot?' · '+TOMBO.lot:''),0,5);ctx.restore()}
+    comic('JO CITY',W/2,H/2-62,96,'#ffdf00');comic('MONDE 1 : LA VILLE',W/2,H/2-6,36,'#fff');
+    ctx.font='24px '+HAND;ctx.fillStyle=INK;ctx.fillText('Clique ici puis appuie sur une flèche pour commencer',W/2,H/2+34);
+    ctx.font='19px '+HAND;ctx.fillStyle=INK;ctx.fillText('Chaque obstacle se débloque grâce aux dons du chat !',W/2,H/2+62);
+    if(TOMBO.on){ctx.save();ctx.translate(W/2,H/2+104);ctx.rotate(-.02);ctx.font='20px '+HAND;const tt='Tombola activée : 1 don = 1 ticket'+(TOMBO.lot?' · '+TOMBO.lot:''),tw=ctx.measureText(tt).width+40;panel(-tw/2,-20,tw,36,'#ffdf00');ctx.textAlign='center';ctx.fillStyle=INK;ctx.fillText('Tombola activée : 1 don = 1 ticket'+(TOMBO.lot?' · '+TOMBO.lot:''),0,5);ctx.restore()}
   }
   if(game.lost){
     const a=Math.min(1,game.lostT/30);ctx.save();ctx.globalAlpha=a;ctx.fillStyle='rgba(1,209,255,.6)';ctx.fillRect(0,0,W,H);
@@ -1127,6 +1135,34 @@ document.getElementById('tomboLot').value=TOMBO.lot;
 document.getElementById('tomboLot').oninput=e=>{TOMBO.lot=e.target.value.trim();saveTombo()};
 let tomboLock=null;
 
+
+/* ================= Bruitages (générés, aucun fichier) ================= */
+const SFX=(()=>{
+  let ac=null,vol=.7;try{const v=localStorage.getItem('jolinngSfxVol');if(v!==null&&!isNaN(+v))vol=Math.max(0,Math.min(1,+v))}catch(e){}
+  const C=()=>{if(!ac){try{ac=new (window.AudioContext||window.webkitAudioContext)()}catch(e){return null}}if(ac.state==='suspended')ac.resume();return ac};
+  let nb=null;const noise=c=>{if(nb)return nb;const b=c.createBuffer(1,c.sampleRate*.5,c.sampleRate),d=b.getChannelData(0);for(let i=0;i<d.length;i++)d[i]=Math.random()*2-1;return nb=b};
+  function tone(f,dur,type,v,when,slide){const c=C();if(!c||vol<=0)return;const t=c.currentTime+(when||0),o=c.createOscillator(),g=c.createGain();o.type=type||'square';o.frequency.setValueAtTime(f,t);if(slide)o.frequency.exponentialRampToValueAtTime(slide,t+dur);g.gain.setValueAtTime(v*vol,t);g.gain.exponentialRampToValueAtTime(.0001,t+dur);o.connect(g).connect(c.destination);o.start(t);o.stop(t+dur+.02)}
+  function hiss(freq,dur,v,type){const c=C();if(!c||vol<=0)return;const t=c.currentTime,s=c.createBufferSource(),f=c.createBiquadFilter(),g=c.createGain();s.buffer=noise(c);f.type=type||'bandpass';f.frequency.value=freq;g.gain.setValueAtTime(v*vol,t);g.gain.exponentialRampToValueAtTime(.0001,t+dur);s.connect(f).connect(g).connect(c.destination);s.start(t);s.stop(t+dur+.02)}
+  return{ctx:C,
+    jump:()=>tone(330,.16,'square',.06,0,640),
+    boing:()=>tone(170,.38,'triangle',.16,0,760),
+    star:()=>{tone(1320,.08,'triangle',.09);tone(1760,.15,'triangle',.08,.06)},
+    flag:()=>[784,988,1175].forEach((f,i)=>tone(f,.13,'triangle',.08,i*.07)),
+    stomp:()=>{tone(220,.13,'square',.08,0,80);hiss(900,.08,.15)},
+    hurt:()=>{tone(300,.28,'sawtooth',.08,0,100);hiss(400,.15,.12)},
+    coin:()=>{tone(988,.07,'square',.05);tone(1319,.22,'square',.05,.07)},
+    tier:()=>[523,659,784,1047].forEach((f,i)=>tone(f,.17,'triangle',.09,i*.08)),
+    spray:()=>hiss(3800,.13,.05,'highpass'),
+    warn:()=>tone(880,.09,'square',.035),
+    boom:()=>{hiss(160,.55,.4,'lowpass');tone(90,.45,'sine',.22,0,35)},
+    win:()=>[523,659,784,1047,1319].forEach((f,i)=>tone(f,.28,'triangle',.1,i*.11)),
+    lose:()=>[392,349,311,262].forEach((f,i)=>tone(f,.32,'sawtooth',.05,i*.2)),
+    get vol(){return vol},
+    setVol(v){vol=Math.max(0,Math.min(1,+v||0));try{localStorage.setItem('jolinngSfxVol',String(vol))}catch(e){}}
+  };
+})();
+addEventListener('pointerdown',()=>SFX.ctx(),{once:true});addEventListener('keydown',()=>SFX.ctx(),{once:true});
+
 /* ================= Boucle ================= */
 let last=performance.now(),acc=0;
 function loop(now){
@@ -1192,6 +1228,14 @@ document.getElementById('slStop').onclick=()=>{slStop();cv.focus({preventScroll:
 document.getElementById('slForget').onclick=()=>{slStop();try{localStorage.removeItem(SL_KEY)}catch(e){}document.getElementById('slTok').value='';slTokHint()};
 function slTokHint(){document.getElementById('slTok').placeholder=slTok()?'Token enregistré (•••• caché)':'Colle ton token Socket API'}
 slTokHint();
+/* cadre du token caché par défaut : code à 4 chiffres pour l'afficher (évite de le montrer en live par erreur) */
+(function(){const H='5f8415ac6340bbae4ebc8c77dac21c7fab54db45a306396bff6c678e012ae5fe',pin=document.getElementById('slPin'),inner=document.getElementById('slInner'),lock=document.getElementById('slLock'),hide=document.getElementById('slHide');
+  async function sha(t){const b=await crypto.subtle.digest('SHA-256',new TextEncoder().encode(t));return [...new Uint8Array(b)].map(x=>x.toString(16).padStart(2,'0')).join('')}
+  const open=async()=>{if(await sha(pin.value.trim())!==H){pin.value='';pin.placeholder='Code faux';return}pin.value='';pin.placeholder='Code';inner.style.display='';lock.style.display='none';hide.style.display=''};
+  document.getElementById('slShow').onclick=open;pin.addEventListener('keydown',e=>{e.stopPropagation();if(e.key==='Enter')open()});pin.addEventListener('keyup',e=>e.stopPropagation());
+  document.getElementById('slTok').addEventListener('keydown',e=>e.stopPropagation());
+  hide.onclick=()=>{inner.style.display='none';lock.style.display='';hide.style.display='none';document.getElementById('slTok').value=''};
+})();
 
 /* ================= Panneau ================= */
 const donor=()=>document.getElementById('pseudo').value.trim()||pick(NAMES);
@@ -1256,7 +1300,12 @@ setTimeout(boot,2500);
   async function sha(t){const b=await crypto.subtle.digest('SHA-256',new TextEncoder().encode(t));return [...new Uint8Array(b)].map(x=>x.toString(16).padStart(2,'0')).join('')}
   gear.onclick=()=>{if(unlocked&&!panel.classList.contains('locked')){show(false);return}if(unlocked){show(true);return}err.textContent='';code.value='';adm.classList.add('on');setTimeout(()=>code.focus(),50)};
   const ok=async()=>{if(await sha(code.value.trim().toUpperCase())!==HASH){err.textContent='Code incorrect.';return}unlocked=true;try{localStorage.setItem(KEY,'1')}catch(e){}adm.classList.remove('on');show(true);panel.scrollIntoView({behavior:'smooth'})};
-  const mb=document.getElementById('musicBtn');if(window.ChillMusic){const upd=()=>mb.classList.toggle('off',!ChillMusic.on);upd();mb.onclick=()=>{ChillMusic.toggle();upd();document.getElementById('game').focus({preventScroll:true})}}else mb.style.display='none';
+  const mb=document.getElementById('musicBtn');if(window.ChillMusic)ChillMusic.attachPanel(mb,[{label:'Effets (sauts, étoiles…)',get:()=>SFX.vol,set:v=>SFX.setVol(v)}]);else mb.style.display='none';
+  /* plein écran : bouton ou touche F */
+  const wrap=document.querySelector('.wrap'),fs=document.getElementById('fsBtn');
+  const toggleFs=()=>{if(document.fullscreenElement)document.exitFullscreen();else if(wrap.requestFullscreen)wrap.requestFullscreen().then(()=>document.getElementById('game').focus({preventScroll:true})).catch(()=>{})};
+  fs.onclick=toggleFs;addEventListener('keydown',e=>{if((e.key==='f'||e.key==='F')&&!e.ctrlKey&&!e.metaKey&&!(e.target&&e.target.tagName==='INPUT'))toggleFs()});
+  if(!document.fullscreenEnabled&&!wrap.requestFullscreen)fs.style.display='none';
   document.getElementById('admOk').onclick=ok;document.getElementById('admNo').onclick=()=>adm.classList.remove('on');
   code.addEventListener('keydown',e=>{e.stopPropagation();if(e.key==='Enter')ok();if(e.key==='Escape')adm.classList.remove('on')});
   code.addEventListener('keyup',e=>e.stopPropagation());
