@@ -6,7 +6,7 @@
    Données : rooms/city-XXXX/state (partie), /lynn (position de Lynn), /p/<id> (position de chaque chat). */
 (function(){
 const CFG={apiKey:"AIzaSyAvhkSelGSbm9RB5r4Zd7zvn_9kmHverEQ",authDomain:"jolinng-event.firebaseapp.com",databaseURL:"https://jolinng-event-default-rtdb.europe-west1.firebasedatabase.app",projectId:"jolinng-event",storageBucket:"jolinng-event.firebasestorage.app",messagingSenderId:"457590429836",appId:"1:457590429836:web:4c9781aa4d14fef99e83a9"};
-const CATS=['orange','bleu','blanc','rose','vert'],MAX=50,HZ=6;
+const CATS=['orange','bleu','blanc','rose','vert','noir'],MAX=50,HZ=6;
 function db(){if(!window.firebase)return null;try{if(!firebase.apps.length)firebase.initializeApp(CFG);return firebase.database()}catch(e){return null}}
 const clean=s=>String(s||'').replace(/[<>]/g,'').trim().slice(0,16);
 const roomRef=code=>db().ref('rooms/city-'+code.toLowerCase());
