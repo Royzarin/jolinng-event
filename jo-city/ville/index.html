@@ -229,7 +229,8 @@ let W=960;const H=540,GY=460,WORLD_END=23400;
 const ZONES=[{x:-400,name:'SOLEIL',sky:[1,209,255]},{x:6600,name:'AUTOMNE',sky:[255,200,135]},{x:10600,name:'PLUIE',sky:[120,160,190]},{x:14800,name:'NEIGE',sky:[196,226,244]},{x:19000,name:'VERGLAS',sky:[150,214,240]}];
 function zoneAt(x){let z=0;for(let i=0;i<ZONES.length;i++)if(x>=ZONES[i].x)z=i;return z}
 const CAGE={x:23050,ground:460};
-const K=Math.min(2,window.devicePixelRatio||1);cv.width=W*K;cv.height=H*K;
+let K=Math.min(2,window.devicePixelRatio||1);cv.width=W*K;cv.height=H*K;
+const LS=2; /* décors pré-dessinés en double résolution */
 const FONT='"Caveat Brush","Comic Sans MS",cursive';const HAND='"Gochi Hand","Comic Sans MS",cursive';
 const pick=a=>a[Math.floor(Math.random()*a.length)];
 const fmt=n=>n.toLocaleString('fr-FR',{maximumFractionDigits:2})+' €';
@@ -238,7 +239,7 @@ const clamp=(v,a,b)=>Math.max(a,Math.min(b,v));
 /* ================= Décors pré-rendus ================= */
 function seeded(s){return()=>{s=(s*16807)%2147483647;return(s-1)/2147483646}}
 function mkLayer(width,seed,minH,maxH,base,colors,signs,lw){
-  const c=document.createElement('canvas');c.width=width;c.height=H;const g=c.getContext('2d'),r=seeded(seed);
+  const c=document.createElement('canvas');c.width=width*LS;c.height=H*LS;c.lw=width;const g=c.getContext('2d');g.scale(LS,LS);const _g=g,r=seeded(seed);
   g.lineJoin='round';g.lineCap='round';
   let x=0;
   while(x<width){
@@ -1020,8 +1021,8 @@ function render(){
   const c0=ZONES[zi].sky,c1=(ZONES[zi+1]||ZONES[zi]).sky,mix=c0.map((v,i)=>Math.round(v+(c1[i]-v)*zw));
   ctx.fillStyle=`rgb(${mix})`;ctx.fillRect(0,0,W,H);
   if(zi===0){ctx.save();ctx.globalAlpha=1-zw;drawSun(755,128,t);ctx.restore()}drawCloud(((150-cam.x*.06)%1300+1300)%1300-150,150,1);drawCloud(((620-cam.x*.06)%1300+1300)%1300-150,185,.8);drawCloud(((1050-cam.x*.06)%1300+1300)%1300-150,160,.9);
-  const fx=-((cam.x*.15)%farL.width);ctx.globalAlpha=.55;ctx.drawImage(farL,fx,0);ctx.drawImage(farL,fx+farL.width,0);ctx.globalAlpha=1;
-  const mx=-((cam.x*.4)%midL.width);ctx.globalAlpha=.62;ctx.drawImage(midL,mx,0);ctx.drawImage(midL,mx+midL.width,0);ctx.globalAlpha=1;
+  const fx=-((cam.x*.15)%farL.lw);ctx.globalAlpha=.55;ctx.drawImage(farL,fx,0,farL.lw,H);ctx.drawImage(farL,fx+farL.lw,0,farL.lw,H);ctx.globalAlpha=1;
+  const mx=-((cam.x*.4)%midL.lw);ctx.globalAlpha=.62;ctx.drawImage(midL,mx,0,midL.lw,H);ctx.drawImage(midL,mx+midL.lw,0,midL.lw,H);ctx.globalAlpha=1;
   /* voile de couleur sur la ville selon la météo */
   {const tint=[null,'rgba(255,150,60,.16)','rgba(70,95,120,.28)','rgba(255,255,255,.38)','rgba(190,235,255,.32)'];const a=tint[zi],b=tint[Math.min(zi+1,4)];
    if(a){ctx.fillStyle=a;ctx.globalAlpha=1-zw;ctx.fillRect(0,0,W,H);ctx.globalAlpha=1}if(b&&zw>0){ctx.fillStyle=b;ctx.globalAlpha=zw;ctx.fillRect(0,0,W,H);ctx.globalAlpha=1}}
@@ -1047,7 +1048,7 @@ function render(){
   for(const tx of texts)comic(tx.t,tx.x,tx.y,tx.big?44:26,tx.big?'#ffd23f':'#fff',Math.min(1,tx.life/20));
   ctx.restore();
   drawWeather(t,zi,zw);
-  ctx.fillStyle=grain;ctx.fillRect(0,0,W,H);
+  if(grain.setTransform)grain.setTransform(new DOMMatrix([1/K,0,0,1/K,0,0]));ctx.fillStyle=grain;ctx.fillRect(0,0,W,H);
   drawCelebration();
   drawHUD(t);
 }
@@ -1323,7 +1324,7 @@ setTimeout(boot,2500);
   const ok=async()=>{if(await sha(code.value.trim().toUpperCase())!==HASH){err.textContent='Code incorrect.';return}unlocked=true;try{localStorage.setItem(KEY,'1')}catch(e){}adm.classList.remove('on');show(true);setTimeout(()=>panel.scrollIntoView({behavior:'smooth'}),50)};
   /* le jeu remplit tout l'écran : la largeur du jeu s'adapte à la forme de la fenêtre (pas de bandes noires) */
   const wrapEl=document.querySelector('.wrap');
-  function fitW(){const a=innerWidth/innerHeight;if(a<1.25){wrapEl.classList.add('narrow');W=960}else{wrapEl.classList.remove('narrow');W=Math.round(Math.max(800,Math.min(1500,540*a)))}cv.width=W*K;cv.height=H*K}
+  function fitW(){const a=innerWidth/innerHeight,dpr=window.devicePixelRatio||1;if(a<1.25){wrapEl.classList.add('narrow');W=960;K=innerWidth*dpr/960}else{wrapEl.classList.remove('narrow');W=Math.round(Math.max(800,Math.min(1500,540*a)));K=innerHeight*dpr/H}K=Math.max(1,Math.min(3,K));cv.width=Math.round(W*K);cv.height=Math.round(H*K)}
   fitW();addEventListener('resize',fitW);document.addEventListener('fullscreenchange',()=>setTimeout(fitW,60));
   /* menu ☰ : on y range le titre, les touches et les réglages */
   const drawer=document.getElementById('drawer'),slot=document.getElementById('dSlot');

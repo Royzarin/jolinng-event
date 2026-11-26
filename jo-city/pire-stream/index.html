@@ -228,7 +228,8 @@ const ZONES=[
   {x:21500,name:'LA CHAMBRE',bg:'room',sky:[75,63,134]}];
 function zoneAt(x){let z=0;for(let i=0;i<ZONES.length;i++)if(x>=ZONES[i].x)z=i;return z}
 const DESK={x:22660};
-const K=Math.min(2,window.devicePixelRatio||1);cv.width=W*K;cv.height=H*K;
+let K=Math.min(2,window.devicePixelRatio||1);cv.width=W*K;cv.height=H*K;
+const LS=2; /* décors pré-dessinés en double résolution */
 const FONT='"Caveat Brush","Comic Sans MS",cursive';const HAND='"Gochi Hand","Comic Sans MS",cursive';
 const pick=a=>a[Math.floor(Math.random()*a.length)];
 const fmt=n=>n.toLocaleString('fr-FR',{maximumFractionDigits:2})+' €';
@@ -239,7 +240,7 @@ const round2=v=>Math.round(v*100)/100;
 /* ================= Décors pré-rendus ================= */
 function seeded(s){return()=>{s=(s*16807)%2147483647;return(s-1)/2147483646}}
 function mkLayer(width,seed,minH,maxH,base,colors,signs,lw){
-  const c=document.createElement('canvas');c.width=width;c.height=H;const g=c.getContext('2d'),r=seeded(seed);
+  const c=document.createElement('canvas');c.width=width*LS;c.height=H*LS;c.lw=width;const g=c.getContext('2d');g.scale(LS,LS);const _g=g,r=seeded(seed);
   g.lineJoin='round';g.lineCap='round';
   let x=0;
   while(x<width){
@@ -262,7 +263,7 @@ function mkLayer(width,seed,minH,maxH,base,colors,signs,lw){
 }
 /* rayonnages de magasin (décor de fond) */
 function mkShelves(width,seed,frame,boxes,signs){
-  const c=document.createElement('canvas');c.width=width;c.height=H;const g=c.getContext('2d'),r=seeded(seed);
+  const c=document.createElement('canvas');c.width=width*LS;c.height=H*LS;c.lw=width;const g=c.getContext('2d');g.scale(LS,LS);const _g=g,r=seeded(seed);
   g.lineJoin='round';g.lineCap='round';g.strokeStyle='#111';
   let x=10;
   while(x<width-120){
@@ -282,7 +283,7 @@ function mkShelves(width,seed,frame,boxes,signs){
 }
 /* chambre de Lynn (décor de fond) */
 function mkRoom(width){
-  const c=document.createElement('canvas');c.width=width;c.height=H;const g=c.getContext('2d'),r=seeded(42);g.lineJoin='round';g.lineCap='round';
+  const c=document.createElement('canvas');c.width=width*LS;c.height=H*LS;c.lw=width;const g=c.getContext('2d');g.scale(LS,LS);const _g=g,r=seeded(42);g.lineJoin='round';g.lineCap='round';
   g.fillStyle='#4b3f86';g.fillRect(0,0,width,H);g.strokeStyle='rgba(255,255,255,.07)';g.lineWidth=16;for(let x=0;x<width;x+=48){g.beginPath();g.moveTo(x,0);g.lineTo(x,H);g.stroke()}
   g.strokeStyle='#111';
   for(let x=60;x<width-200;x+=420){
@@ -957,13 +958,13 @@ function drawBg(z,a,t){
     if(b==='roof'){circ(760,330,80,'#ffdf00')}
     if(b==='night'){ctx.fillStyle='#fff';for(let i=0;i<46;i++){const sx=((i*137-cam.x*.03)%W+W)%W,sy=(i*71)%280+10;ctx.beginPath();ctx.arc(sx,sy,1.2+(i%3),0,7);ctx.fill()}ol(3);circ(800,110,34,'#fff6c2')}
     if(b!=='night'){drawCloud(((150-cam.x*.06)%1300+1300)%1300-150,150,1);drawCloud(((620-cam.x*.06)%1300+1300)%1300-150,185,.8);drawCloud(((1050-cam.x*.06)%1300+1300)%1300-150,160,.9)}
-    const fx=-((cam.x*.15)%farL.width);ctx.globalAlpha=a*.55;ctx.drawImage(farL,fx,0);ctx.drawImage(farL,fx+farL.width,0);
-    const mx=-((cam.x*.4)%midL.width);ctx.globalAlpha=a*.62;ctx.drawImage(midL,mx,0);ctx.drawImage(midL,mx+midL.width,0);ctx.globalAlpha=a;
+    const fx=-((cam.x*.15)%farL.lw);ctx.globalAlpha=a*.55;ctx.drawImage(farL,fx,0,farL.lw,H);ctx.drawImage(farL,fx+farL.lw,0,farL.lw,H);
+    const mx=-((cam.x*.4)%midL.lw);ctx.globalAlpha=a*.62;ctx.drawImage(midL,mx,0,midL.lw,H);ctx.drawImage(midL,mx+midL.lw,0,midL.lw,H);ctx.globalAlpha=a;
     if(b==='roof'){ctx.fillStyle='rgba(255,120,60,.2)';ctx.fillRect(0,0,W,H)}
     if(b==='night'){ctx.fillStyle='rgba(15,20,60,.55)';ctx.fillRect(0,0,W,H)}
   }else{
     const L=b==='store'?shopL:b==='furni'?furnL:b==='store2'?shop2L:roomL,sp=b==='room'?.25:.4;
-    const lx=-((cam.x*sp)%L.width);ctx.globalAlpha=a*(b==='room'?1:.5);ctx.drawImage(L,lx,0);ctx.drawImage(L,lx+L.width,0);ctx.globalAlpha=a;
+    const lx=-((cam.x*sp)%L.lw);ctx.globalAlpha=a*(b==='room'?1:.5);ctx.drawImage(L,lx,0,L.lw,H);ctx.drawImage(L,lx+L.lw,0,L.lw,H);ctx.globalAlpha=a;
     if(b!=='room'){ol(3);for(let i=0;i<5;i++){const nx=((i*260-cam.x*.6)%1300+1300)%1300-150;rr(nx,14,150,12,6,'#fff')}}
   }
   ctx.restore();
@@ -1022,7 +1023,7 @@ function render(){
   /* ring light : Lynn est éblouie tant qu'elle n'a pas ses lunettes */
   {const a=Math.min(1,game.blindA*.86+game.flash/50);if(a>.01){ctx.save();ctx.globalAlpha=a;const gr=ctx.createRadialGradient(W*.4,H*.55,40,W*.4,H*.55,W*.8);gr.addColorStop(0,'#fffef5');gr.addColorStop(1,'#fff6c8');ctx.fillStyle=gr;ctx.fillRect(0,0,W,H);ctx.restore();
     if(game.blind&&game.flash<=0&&Math.floor(t/40)%2)comic('JE VOIS RIEN !',P.x-cam.x+15,Math.max(60,P.y-60),34,'#ffdf00',.9)}}
-  ctx.fillStyle=grain;ctx.fillRect(0,0,W,H);
+  if(grain.setTransform)grain.setTransform(new DOMMatrix([1/K,0,0,1/K,0,0]));ctx.fillStyle=grain;ctx.fillRect(0,0,W,H);
   drawCelebration();
   drawHUD(t);
 }
@@ -1285,7 +1286,7 @@ setTimeout(boot,2500);
   const ok=async()=>{if(await sha(code.value.trim().toUpperCase())!==HASH){err.textContent='Code incorrect.';return}unlocked=true;try{localStorage.setItem(KEY,'1')}catch(e){}adm.classList.remove('on');show(true);setTimeout(()=>panel.scrollIntoView({behavior:'smooth'}),50)};
   /* le jeu remplit tout l'écran : la largeur du jeu s'adapte à la forme de la fenêtre (pas de bandes noires) */
   const wrapEl=document.querySelector('.wrap');
-  function fitW(){const a=innerWidth/innerHeight;if(a<1.25){wrapEl.classList.add('narrow');W=960}else{wrapEl.classList.remove('narrow');W=Math.round(Math.max(800,Math.min(1500,540*a)))}cv.width=W*K;cv.height=H*K}
+  function fitW(){const a=innerWidth/innerHeight,dpr=window.devicePixelRatio||1;if(a<1.25){wrapEl.classList.add('narrow');W=960;K=innerWidth*dpr/960}else{wrapEl.classList.remove('narrow');W=Math.round(Math.max(800,Math.min(1500,540*a)));K=innerHeight*dpr/H}K=Math.max(1,Math.min(3,K));cv.width=Math.round(W*K);cv.height=Math.round(H*K)}
   fitW();addEventListener('resize',fitW);document.addEventListener('fullscreenchange',()=>setTimeout(fitW,60));
   /* menu ☰ : on y range le titre, les touches et les réglages */
   const drawer=document.getElementById('drawer'),slot=document.getElementById('dSlot');
