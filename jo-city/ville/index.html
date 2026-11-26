@@ -52,7 +52,8 @@ input[type=number]{width:100px}
 html,body{margin:0;height:100%;overflow:hidden;background:#0d1a26}
 body{display:block!important;padding:0!important}
 .wrap{position:fixed!important;inset:0;width:100vw!important;height:100vh;height:100dvh;max-width:none!important;display:flex;align-items:center;justify-content:center;background:#0d1a26}
-.wrap canvas{width:min(100vw,calc(100dvh*16/9))!important;height:auto;border-radius:0!important;box-shadow:none!important}
+.wrap canvas{width:100vw!important;height:100vh!important;height:100dvh!important;aspect-ratio:auto!important;border-radius:0!important;box-shadow:none!important}
+.wrap.narrow canvas{width:100vw!important;height:auto!important;aspect-ratio:16/9!important}
 .touch{position:fixed;left:0;right:0;bottom:12px;width:auto!important;padding:0 14px;z-index:20}
 .burger{position:fixed;left:12px;bottom:12px;z-index:40;width:52px;height:46px;border-radius:12px;background:rgba(255,251,233,.92);border:2.5px solid #111;box-shadow:3px 3px 0 #111;display:flex;flex-direction:column;justify-content:center;align-items:center;gap:5px;cursor:pointer;padding:0;opacity:.75;transition:opacity .2s}
 .burger:hover,.burger:focus-visible{opacity:1}
@@ -67,7 +68,9 @@ body{display:block!important;padding:0!important}
 .dwin .top{text-align:left;align-items:flex-start}
 .dwin .top h1{font-size:28px;margin:0}
 .dwin .keys{justify-content:flex-start;gap:10px 16px}
-.dwin .panel{width:auto!important;box-sizing:border-box}
+.dwin .panel{width:auto!important;box-sizing:border-box;color:#111}
+.dwin .panel h3,.dwin .panel label,.dwin .panel span,.dwin .panel p,.dwin .panel b,.dwin .panel div{color:#111}
+.dwin .panel .note{color:#333}
 .dwin .panel .slots{grid-template-columns:1fr!important}
 .snd{background:var(--paper);color:var(--ink);border:2.5px solid #111;border-radius:14px;padding:10px 14px;display:grid;gap:8px;box-shadow:3px 3px 0 #111}
 .snd label{display:flex;flex-direction:column;gap:2px;font-size:17px}
@@ -221,7 +224,7 @@ const NAMES=["Kev_du_93","Lunaa","xXDarkSasukeXx","MamieGamer","Tonton_Pixel","C
 
 /* ================= Canvas ================= */
 const cv=document.getElementById('game'),ctx=cv.getContext('2d');
-const W=960,H=540,GY=460,WORLD_END=23400;
+let W=960;const H=540,GY=460,WORLD_END=23400;
 /* Zones météo : début (x) de chaque zone */
 const ZONES=[{x:-400,name:'SOLEIL',sky:[1,209,255]},{x:6600,name:'AUTOMNE',sky:[255,200,135]},{x:10600,name:'PLUIE',sky:[120,160,190]},{x:14800,name:'NEIGE',sky:[196,226,244]},{x:19000,name:'VERGLAS',sky:[150,214,240]}];
 function zoneAt(x){let z=0;for(let i=0;i<ZONES.length;i++)if(x>=ZONES[i].x)z=i;return z}
@@ -1318,6 +1321,10 @@ setTimeout(boot,2500);
   async function sha(t){const b=await crypto.subtle.digest('SHA-256',new TextEncoder().encode(t));return [...new Uint8Array(b)].map(x=>x.toString(16).padStart(2,'0')).join('')}
   gear.onclick=()=>{if(unlocked&&!panel.classList.contains('locked')){show(false);return}if(unlocked){show(true);return}err.textContent='';code.value='';adm.classList.add('on');setTimeout(()=>code.focus(),50)};
   const ok=async()=>{if(await sha(code.value.trim().toUpperCase())!==HASH){err.textContent='Code incorrect.';return}unlocked=true;try{localStorage.setItem(KEY,'1')}catch(e){}adm.classList.remove('on');show(true);setTimeout(()=>panel.scrollIntoView({behavior:'smooth'}),50)};
+  /* le jeu remplit tout l'écran : la largeur du jeu s'adapte à la forme de la fenêtre (pas de bandes noires) */
+  const wrapEl=document.querySelector('.wrap');
+  function fitW(){const a=innerWidth/innerHeight;if(a<1.25){wrapEl.classList.add('narrow');W=960}else{wrapEl.classList.remove('narrow');W=Math.round(Math.max(800,Math.min(1500,540*a)))}cv.width=W*K;cv.height=H*K}
+  fitW();addEventListener('resize',fitW);document.addEventListener('fullscreenchange',()=>setTimeout(fitW,60));
   /* menu ☰ : on y range le titre, les touches et les réglages */
   const drawer=document.getElementById('drawer'),slot=document.getElementById('dSlot');
   ['.top','.keys','.panel'].forEach(q=>{const el=document.querySelector(q);if(el)slot.appendChild(el)});

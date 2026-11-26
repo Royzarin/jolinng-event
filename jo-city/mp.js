@@ -64,19 +64,22 @@ function stepSmooth(o){if(o.dx==null)return;const jump=Math.abs(o.tx-o.dx)>400;o
 
 /* ================= HÔTE (Lynn) ================= */
 if(!VIEWER){
-  let code=null,ref=null,others={},gen=0,sendT=null,lastState='';
+  let code=null,ref=null,others={},gen=0,sendT=null,lastState='',live=false,err='';
   const panel=document.querySelector('.panel');
   const box=document.createElement('div');box.className='slbox';box.style.background='#fff3c2';
   box.innerHTML='<h3 style="margin:0 0 6px">Viewers : rejoindre la partie avec un code</h3><div class="row"><button class="don" id="mpOpen">Ouvrir la partie aux viewers</button><button id="mpNew">Nouveau code</button><button id="mpClose">Fermer</button><span id="mpState">Fermé</span></div><p class="note" style="margin:6px 0 0">Le code s\'affiche en bas à droite du jeu, visible sur le live. Les viewers vont sur jolinng-event.fr/jo-city/, cliquent sur « Rejoindre », entrent leur pseudo, le code et choisissent la couleur de leur chat (50 maximum). Ils jouent leur chat chez eux ; les paliers, le chrono et la difficulté suivent ta partie. Si tu changes de monde, garde le même code : les viewers te suivent.</p>';
   if(panel)panel.insertBefore(box,panel.firstChild);
   const stEl=()=>document.getElementById('mpState');
-  function status(){if(stEl())stEl().textContent=code?`Ouvert · code ${code} · ${Object.keys(others).length} chat${Object.keys(others).length>1?'s':''}`:'Fermé'}
+  function status(){if(!stEl())return;stEl().style.color=err?'#d11':'';stEl().textContent=err?err:!code?'Fermé':!live?`Connexion… (code ${code})`:`Ouvert · code ${code} · ${Object.keys(others).length} chat${Object.keys(others).length>1?'s':''}`}
   function newCode(){const A='ABCDEFGHJKLMNPQRSTUVWXYZ23456789';let c='';for(let i=0;i<4;i++)c+=A[Math.floor(Math.random()*A.length)];return c}
   async function open(c){
-    if(!db()){alert('Connexion à Firebase impossible.');return}
-    await close(true);code=c;try{localStorage.setItem('jcHostCode',code)}catch(e){}
+    await close(true);code=c;live=false;err='';try{localStorage.setItem('jcHostCode',code)}catch(e){}status();
+    if(!db()){err='Connexion à Firebase impossible (internet coupé ?)';status();return}
     ref=roomRef(code);
-    try{await ref.child('state').set(stateObj());await ref.child('lynn').set(posOf())}catch(e){code=null;ref=null;stEl().textContent='Refusé par Firebase : as-tu bien publié les nouvelles règles ?';return}
+    const timeout=new Promise((_,rej)=>setTimeout(()=>rej(new Error('timeout')),8000));
+    try{await Promise.race([Promise.all([ref.child('state').set(stateObj()),ref.child('lynn').set(posOf())]),timeout])}
+    catch(e){ref=null;err=String(e&&e.message).includes('timeout')?'Firebase ne répond pas : vérifie internet, puis réessaie.':'Refusé par Firebase : publie les nouvelles règles (fichier firebase-rules.json), puis réessaie.';status();return}
+    live=true;
     ref.child('state').onDisconnect().remove();ref.child('lynn').onDisconnect().remove();
     const P_=ref.child('p');
     P_.on('child_added',s=>{const d=s.val()||{};const o=others[s.key]={n:clean(d.n)||'Chat',c:CATS.includes(d.c)?d.c:'orange',k:d.k};smooth(o,d);status()});
@@ -87,7 +90,7 @@ if(!VIEWER){
   async function close(keepCode){
     clearInterval(sendT);sendT=null;
     if(ref){try{ref.child('p').off();await ref.child('state').onDisconnect().cancel();await ref.child('lynn').onDisconnect().cancel();await ref.remove()}catch(e){}}
-    ref=null;others={};if(!keepCode){code=null;try{localStorage.removeItem('jcHostCode')}catch(e){}}status();
+    ref=null;others={};live=false;err='';if(!keepCode){code=null;try{localStorage.removeItem('jcHostCode')}catch(e){}}status();
   }
   function stateObj(){
     return{w:WORLD,st:game.started?1:0,win:game.win?1:0,lost:game.lost?1:0,lvl:LEVEL,left:Math.round(game.left),stage:game.stage,gen,
@@ -116,9 +119,9 @@ if(!VIEWER){
   // code affiché sur le jeu (visible sur le live)
   const _render=render;render=function(){
     _render.apply(this,arguments);if(!code)return;
-    ctx.save();const n=Object.keys(others).length,t1=`CODE : ${code}`,t2=`jolinng-event.fr/jo-city · ${n} chat${n>1?'s':''}`;
+    ctx.save();const n=Object.keys(others).length,t1=`CODE : ${code}`,t2=err?'code inactif : voir le menu ☰':!live?'connexion…':`jolinng-event.fr/jo-city · ${n} chat${n>1?'s':''}`;
     ctx.font='30px "Caveat Brush","Comic Sans MS",cursive';const w1=ctx.measureText(t1).width;ctx.font='14px "Gochi Hand","Comic Sans MS",cursive';const bw=Math.max(w1,ctx.measureText(t2).width)+28;
-    const x=W-bw-14,y=H-120;ctx.fillStyle='#ffdf00';ctx.strokeStyle='#111';ctx.lineWidth=3;ctx.beginPath();ctx.roundRect(x,y,bw,58,10);ctx.fill();ctx.stroke();
+    const x=W-bw-14,y=H-120;ctx.fillStyle=err?'#ff8a8a':'#ffdf00';ctx.strokeStyle='#111';ctx.lineWidth=3;ctx.beginPath();ctx.roundRect(x,y,bw,58,10);ctx.fill();ctx.stroke();
     ctx.fillStyle='#111';ctx.textAlign='center';ctx.font='30px "Caveat Brush","Comic Sans MS",cursive';ctx.fillText(t1,x+bw/2,y+30);ctx.font='14px "Gochi Hand","Comic Sans MS",cursive';ctx.fillText(t2,x+bw/2,y+50);ctx.restore();
   };
   addEventListener('beforeunload',()=>{if(ref){try{ref.child('p').off()}catch(e){}}});
