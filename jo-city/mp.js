@@ -119,10 +119,10 @@ if(!VIEWER){
   // code affiché sur le jeu (visible sur le live)
   const _render=render;render=function(){
     _render.apply(this,arguments);if(!code)return;
-    ctx.save();const n=Object.keys(others).length,t1=`CODE : ${code}`,t2=err?'code inactif : voir le menu ☰':!live?'connexion…':`jolinng-event.fr/jo-city · ${n} chat${n>1?'s':''}`;
-    ctx.font='30px "Caveat Brush","Comic Sans MS",cursive';const w1=ctx.measureText(t1).width;ctx.font='14px "Gochi Hand","Comic Sans MS",cursive';const bw=Math.max(w1,ctx.measureText(t2).width)+28;
-    const x=W-bw-14,y=H-120;ctx.fillStyle=err?'#ff8a8a':'#ffdf00';ctx.strokeStyle='#111';ctx.lineWidth=3;ctx.beginPath();ctx.roundRect(x,y,bw,58,10);ctx.fill();ctx.stroke();
-    ctx.fillStyle='#111';ctx.textAlign='center';ctx.font='30px "Caveat Brush","Comic Sans MS",cursive';ctx.fillText(t1,x+bw/2,y+30);ctx.font='14px "Gochi Hand","Comic Sans MS",cursive';ctx.fillText(t2,x+bw/2,y+50);ctx.restore();
+    ctx.save();const n=Object.keys(others).length,t1=`CODE : ${code}`,t2=err?'code inactif : voir le menu ☰':!live?'connexion…':'pour jouer : jolinng-event.fr/jo-city';
+    ctx.font='19px "Caveat Brush","Comic Sans MS",cursive';const w1=ctx.measureText(t1).width;ctx.font='10px "Gochi Hand","Comic Sans MS",cursive';const bw=Math.max(w1,ctx.measureText(t2).width)+16;
+    const x=W-bw-8,y=H-44;ctx.globalAlpha=.92;ctx.fillStyle=err?'#ff8a8a':'#ffdf00';ctx.strokeStyle='#111';ctx.lineWidth=2;ctx.beginPath();ctx.roundRect(x,y,bw,36,7);ctx.fill();ctx.stroke();ctx.globalAlpha=1;
+    ctx.fillStyle='#111';ctx.textAlign='center';ctx.font='19px "Caveat Brush","Comic Sans MS",cursive';ctx.fillText(t1,x+bw/2,y+18);ctx.font='10px "Gochi Hand","Comic Sans MS",cursive';ctx.fillText(t2,x+bw/2,y+31);ctx.restore();
   };
   addEventListener('beforeunload',()=>{if(ref){try{ref.child('p').off()}catch(e){}}});
   return;
