@@ -95,7 +95,7 @@ if(!VIEWER){
   function stateObj(){
     return{w:WORLD,st:game.started?1:0,win:game.win?1:0,lost:game.lost?1:0,lvl:LEVEL,left:Math.round(game.left),stage:game.stage,gen,
       d:gates.map(g=>g.done?1:0).join(''),r:gates.map(g=>g.revealed===false?0:1).join(''),
-      nm:gates.map(g=>g.name).join('|'),
+      nm:gates.map(g=>g.name).join('|'),f:gates.map(g=>Math.round((g.filled||0)*100)/100).join(','),tot:game.total,bank:game.bank||0,
       al:game.alert?{w:clean(game.alert.who),a:game.alert.amount,id:game.alertId||0}:null};
   }
   function tick(){
@@ -155,6 +155,8 @@ ref.child('state').on('value',s=>{
   if(d.lvl&&LEVELS[d.lvl]&&LEVEL!==d.lvl){LEVEL=d.lvl;if(!d.st)game.lives=LEVELS[LEVEL].lynnLives}
   if(gen!==null&&d.gen!==gen){buildLevel();setSkin(me.cat);ko=false;toast('Lynn relance la partie !')}
   gen=d.gen;host=d;hostLeft=d.left;
+  if(d.f){const f=String(d.f).split(',');gates.forEach((g,i)=>{const v=+f[i];if(!isNaN(v)&&!g.done)g.filled=v})}
+  if(typeof d.tot==='number')game.total=d.tot;if(typeof d.bank==='number')game.bank=d.bank;
   if(d.nm){const nm=String(d.nm).split('|');nm.forEach((n,i)=>{n=String(n||'').replace(/[<>]/g,'').trim().slice(0,20);if(n&&GATES_DEF[i]){GATES_DEF[i].name=n;if(gates&&gates[i])gates[i].name=n}})}
   if(d.al&&d.al.id&&d.al.id!==lastAlert){if(lastAlert||Date.now()-joinedAt>3000){game.alert={who:d.al.w,amount:d.al.a};game.alertT=200;lastName=d.al.w;if(window.SFX)SFX.coin()}lastAlert=d.al.id}
 });
