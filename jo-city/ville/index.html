@@ -41,6 +41,8 @@ input[type=number]{width:100px}
 .slot{background:#fff;border:2.5px dashed #111;border-radius:12px;padding:8px 10px;display:flex;gap:10px;align-items:center;cursor:pointer}
 .slot:hover{background:#fff7c2}
 .slot input{display:none}
+.slot input.nm{display:inline-block;width:150px;font-size:15px;padding:2px 8px;border:2px solid #111;border-radius:8px;cursor:text}
+.slot .nmrow{display:flex;align-items:center;gap:4px;flex-wrap:wrap}
 .slot .thumb{width:48px;height:48px;border-radius:8px;background:#e9f9ff center/contain no-repeat;flex:none;display:flex;align-items:center;justify-content:center;font-size:22px;overflow:hidden;border:2px solid #111}
 .slot b{display:block;font-size:17px;font-weight:400}
 .slot span{font-size:14px;color:#444}
@@ -178,10 +180,10 @@ body{display:block!important;padding:0!important}
       <label class="slot"><input type="file" accept="image/*,video/*" data-key="heroRun"><div class="thumb">→</div><div><b>Héros · course</b><span>Quand il court</span></div></label>
       <label class="slot"><input type="file" accept="image/*,video/*" data-key="heroJump"><div class="thumb">↑</div><div><b>Héros · saut</b><span>En l'air (saut, chute)</span></div></label>
       <label class="slot"><input type="file" accept="image/*,video/*" data-key="princess"><div class="thumb" style="background-image:url(../cats/orange.png)"></div><div><b>À délivrer</b><span>Prisonnier à la fin</span></div></label>
-      <label class="slot"><input type="file" accept="image/*,video/*" data-key="v1"><div class="thumb">1</div><div><b>Méchant 1</b><span>Gros Bras · 7 €</span></div></label>
-      <label class="slot"><input type="file" accept="image/*,video/*" data-key="v2"><div class="thumb">2</div><div><b>Méchant 2</b><span>Rat des Toits · 12 €</span></div></label>
-      <label class="slot"><input type="file" accept="image/*,video/*" data-key="v3"><div class="thumb">3</div><div><b>Méchant 3</b><span>Chef de Gang · 20 €</span></div></label>
-      <label class="slot"><input type="file" accept="image/*,video/*" data-key="boss"><div class="thumb">B</div><div><b>Boss final</b><span>Le Baron · 50 €</span></div></label>
+      <label class="slot"><input type="file" accept="image/*,video/*" data-key="v1"><div class="thumb">1</div><div><b>Méchant 1</b><span class="nmrow"><input class="nm" data-gate="v1" maxlength="20" placeholder="Gros Bras" title="Nom affiché dans le jeu" autocomplete="off"> · 7 €</span></div></label>
+      <label class="slot"><input type="file" accept="image/*,video/*" data-key="v2"><div class="thumb">2</div><div><b>Méchant 2</b><span class="nmrow"><input class="nm" data-gate="v2" maxlength="20" placeholder="Rat des Toits" title="Nom affiché dans le jeu" autocomplete="off"> · 12 €</span></div></label>
+      <label class="slot"><input type="file" accept="image/*,video/*" data-key="v3"><div class="thumb">3</div><div><b>Méchant 3</b><span class="nmrow"><input class="nm" data-gate="v3" maxlength="20" placeholder="Chef de Gang" title="Nom affiché dans le jeu" autocomplete="off"> · 20 €</span></div></label>
+      <label class="slot"><input type="file" accept="image/*,video/*" data-key="boss"><div class="thumb">B</div><div><b>Boss final</b><span class="nmrow"><input class="nm" data-gate="boss" maxlength="20" placeholder="Le Baron" title="Nom affiché dans le jeu" autocomplete="off"> · 50 €</span></div></label>
     </div>
     <div class="row" style="margin-top:10px"><button id="clearMedia">Revenir aux persos par défaut</button></div>
   </div>
@@ -1277,8 +1279,17 @@ function useFile(key,file){
   const th=document.querySelector(`input[data-key="${key}"]`).nextElementSibling;th.textContent='';th.style.backgroundImage='';
   if(video){const v=el.cloneNode();v.muted=true;v.style.cssText='width:100%;height:100%;object-fit:contain';th.appendChild(v);v.play().catch(()=>{})}else th.style.backgroundImage=`url(${url})`;
 }
-document.querySelectorAll('.slot input').forEach(inp=>inp.onchange=()=>{const f=inp.files[0];if(!f)return;useFile(inp.dataset.key,f);dbDo('readwrite',s=>s.put(f,inp.dataset.key)).catch(()=>{})});
-document.getElementById('clearMedia').onclick=()=>dbDo('readwrite',s=>s.clear()).catch(()=>{}).then(()=>location.reload());
+document.querySelectorAll('.slot input[type=file]').forEach(inp=>inp.onchange=()=>{const f=inp.files[0];if(!f)return;useFile(inp.dataset.key,f);dbDo('readwrite',s=>s.put(f,inp.dataset.key)).catch(()=>{})});
+document.getElementById('clearMedia').onclick=()=>{try{localStorage.removeItem('jcNames')}catch(e){}dbDo('readwrite',s=>s.clear()).catch(()=>{}).then(()=>location.reload())};
+/* noms des méchants et du boss, modifiables par Lynn (gardés dans ce navigateur) */
+const DEF_NAMES={};GATES_DEF.forEach(g=>{if(g.key)DEF_NAMES[g.key]=g.name});
+let NAMES_C={};try{NAMES_C=JSON.parse(localStorage.getItem('jcNames')||'{}')||{}}catch(e){}
+function applyNames(){GATES_DEF.forEach((g,i)=>{if(g.key)g.name=(NAMES_C[g.key]||'').trim()||DEF_NAMES[g.key];if(gates&&gates[i])gates[i].name=g.name});
+  if(typeof fillSettings==='function')try{fillSettings()}catch(e){}}
+document.querySelectorAll('input.nm').forEach(inp=>{inp.value=NAMES_C[inp.dataset.gate]||'';
+  inp.addEventListener('click',e=>e.stopPropagation());inp.addEventListener('keydown',e=>e.stopPropagation());
+  inp.addEventListener('input',()=>{NAMES_C[inp.dataset.gate]=inp.value.replace(/[<>]/g,'').slice(0,20);try{localStorage.setItem('jcNames',JSON.stringify(NAMES_C))}catch(e){}applyNames()})});
+applyNames();
 dbDo('readonly',s=>{const out={};s.openCursor().onsuccess=e=>{const c=e.target.result;if(c){out[c.key]=c.value;c.continue()}};return out}).then(all=>Object.keys(all).forEach(k=>useFile(k,all[k]))).catch(()=>{});
 
 document.querySelectorAll('.skin').forEach(b=>b.onclick=()=>{setSkin(b.dataset.skin);cv.focus({preventScroll:true})});
