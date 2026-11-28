@@ -31,6 +31,12 @@ button{cursor:pointer;box-shadow:2px 2px 0 #111}button.go{background:var(--yello
 .list{max-height:30vh;overflow:auto;border:2px dashed #111;border-radius:10px;padding:6px 10px;font-size:16px;background:#fff}
 .lock{position:fixed;inset:0;z-index:60;background:rgba(0,0,0,.6);display:flex;align-items:center;justify-content:center}
 .lock .card{min-width:300px;display:grid;gap:10px}
+.cats{position:fixed;left:0;right:0;bottom:-3px;display:flex;justify-content:space-between;align-items:flex-end;padding:0 2vw;pointer-events:none;z-index:1;line-height:0}
+.cats img{width:min(20vw,26vh);display:block}
+.stage{z-index:2}
+.goBig{font-family:"Caveat Brush",cursive;font-size:min(5vw,6vh);padding:.6vh 3vw;background:var(--yellow);border:4px solid var(--ink);border-radius:16px;box-shadow:5px 5px 0 var(--ink);cursor:pointer;margin-top:1vh}
+.goBig:hover{transform:rotate(-1.5deg) scale(1.03)}
+.burger{z-index:40;left:auto;right:12px}
 </style></head><body>
 <div class="stage">
   <h1>TOMBOLA !</h1>
@@ -39,10 +45,12 @@ button{cursor:pointer;box-shadow:2px 2px 0 #111}button.go{background:var(--yello
     <div class="status" id="vStatus"></div>
     <div class="bar" id="vBar"><i id="vFill"></i></div>
     <div class="name" id="vName"></div>
-    <div class="name" id="vTimer" style="color:#111;display:none"></div>
+    <div class="name" id="vTimer" style="color:#111"></div>
     <div class="big" id="vInfo"></div>
+    <button class="goBig" id="bGo">Lancer le chrono</button>
   </div>
 </div>
+<div class="cats" aria-hidden="true"><img src="../cats/noir.webp" alt=""><img src="../cats/orange.webp" alt=""></div>
 <button class="burger" id="burger" title="Réglages"><span></span><span></span><span></span></button>
 <div class="drawer" id="drawer"><div class="dwin">
   <div class="row" style="justify-content:space-between"><h2>Réglages tombola</h2><button id="dClose">✕ Fermer</button></div>
@@ -94,7 +102,12 @@ function check(){if(!T.started&&!T.stopped&&T.now>=T.at&&T.at>0){T.started=true;
 /* chrono */
 $('bTimer').onclick=()=>{const m=Math.max(1,+$('sMin').value||5);T.end=Date.now()+m*60000;T.donors={};T.drawn=[];T.started=true;T.stopped=false;T.winner=null;$('vName').textContent='';$('vName').className='name';$('drawer').classList.remove('on');flash('Faites vos dons !');save()};
 $('bTimerStop').onclick=()=>{T.end=0;save()};
-setInterval(()=>{if(!T.end){$('vTimer').style.display='none';return}const left=Math.max(0,Math.ceil((T.end-Date.now())/1000));$('vTimer').style.display='';$('vTimer').textContent=Math.floor(left/60)+':'+String(left%60).padStart(2,'0');$('vTimer').style.color=left<=10?'#ff2a2a':'#111';
+$('bGo').onclick=()=>$('bTimer').click();
+const mins=()=>Math.max(1,+$('sMin').value||5);
+$('sMin').oninput=()=>{try{localStorage.setItem('jlTombolaMin',$('sMin').value)}catch(e){}};
+try{const v=localStorage.getItem('jlTombolaMin');if(v)$('sMin').value=v}catch(e){}
+setInterval(()=>{if(!T.end){const idle=(!T.started||!!T.winner||(T.stopped&&!Object.keys(T.donors).length))&&!anim;$('vTimer').style.display=idle&&!T.winner?'':'none';$('vTimer').style.color='#111';$('vTimer').textContent=mins()+':00';$('bGo').style.display=idle?'':'none';$('bGo').textContent=T.winner?'Relancer un chrono':'Lancer le chrono';return}
+  $('bGo').style.display='none';const left=Math.max(0,Math.ceil((T.end-Date.now())/1000));$('vTimer').style.display='';$('vTimer').textContent=Math.floor(left/60)+':'+String(left%60).padStart(2,'0');$('vTimer').style.color=left<=10?'#ff2a2a':'#111';
   if(left<=10&&left>0&&left!==window._lb){window._lb=left;beep(880,.06)}
   if(left===0){T.end=0;T.stopped=true;save();$('vTimer').style.display='none';setTimeout(draw,800)}},250);
 $('bStart').onclick=()=>{T.started=true;T.stopped=false;save()};
@@ -118,7 +131,7 @@ function draw(){
   clearTimeout(anim);let i=0,step=0;const total=names.length>1?38:4;
   $('drawer').classList.remove('on');
   const tick=()=>{step++;$('vName').className='name';$('vName').textContent=names[i++%names.length];beep(420+Math.random()*200,.04);
-    if(step>=total){T.winner=win;$('vName').textContent=win;$('vName').className='name win';beep(660,.15);setTimeout(()=>beep(990,.3),130);save();return}
+    if(step>=total){anim=null;T.winner=win;$('vName').textContent=win;$('vName').className='name win';beep(660,.15);setTimeout(()=>beep(990,.3),130);save();return}
     anim=setTimeout(tick,40+Math.pow(step/total,2)*380)};
   tick();
 }
@@ -130,7 +143,7 @@ let flashT=null;function flash(t){$('vInfo').textContent=t;clearTimeout(flashT);
 function render(){
   $('vLot').textContent=T.lot?'À gagner : '+T.lot:'';
   const names=Object.keys(T.donors),tk=names.reduce((s,n)=>s+tickets(n),0);
-  if(!T.started){$('vStatus').textContent='Bientôt : lance le chrono depuis le menu ☰';$('vBar').style.display='none'}
+  if(!T.started){$('vStatus').textContent='Chaque don pendant le chrono = 1 ticket';$('vBar').style.display='none'}
   else{$('vBar').style.display='none';$('vStatus').textContent=T.stopped?`Collecte terminée · ${names.length} participant${names.length>1?'s':''} · ${tk} ticket${tk>1?'s':''}`:`En cours ! ${T.mode==='euro'?'1 € = 1 ticket':'1 don = 1 ticket'} · ${names.length} participant${names.length>1?'s':''} · ${tk} ticket${tk>1?'s':''}`}
   if(T.winner){$('vName').textContent=T.winner;$('vName').className='name win';$('vInfo').textContent=T.lot?`${T.winner} remporte ${T.lot} !`:`Bravo ${T.winner} !`}
   else if(!anim||$('vName').className!=='name'){if(!T.winner&&$('vName').className==='name win')$('vName').textContent='';if(!flashT)$('vInfo').textContent=T.started?'Chaque don te donne une chance !':''}
