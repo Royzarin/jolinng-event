@@ -37,6 +37,12 @@ button{cursor:pointer;box-shadow:2px 2px 0 #111}button.go{background:var(--yello
 .goBig{font-family:"Caveat Brush",cursive;font-size:min(5vw,6vh);padding:.6vh 3vw;background:var(--yellow);border:4px solid var(--ink);border-radius:16px;box-shadow:5px 5px 0 var(--ink);cursor:pointer;margin-top:1vh}
 .goBig:hover{transform:rotate(-1.5deg) scale(1.03)}
 .burger{z-index:40;left:auto;right:12px}
+.name:empty{display:none}
+.card{position:relative;overflow:hidden;padding-bottom:min(13vw,15vh)}
+.incat{position:absolute;bottom:-4px;width:min(12vw,15vh);pointer-events:none}
+.incat.l{left:2%}.incat.r{right:2%}
+.btns{display:flex;gap:2vw;justify-content:center;flex-wrap:wrap;position:relative;z-index:2}
+.goBig.alt{background:#fff;font-size:min(4vw,5vh)}
 </style></head><body>
 <div class="stage">
   <h1>TOMBOLA !</h1>
@@ -47,16 +53,16 @@ button{cursor:pointer;box-shadow:2px 2px 0 #111}button.go{background:var(--yello
     <div class="name" id="vName"></div>
     <div class="name" id="vTimer" style="color:#111"></div>
     <div class="big" id="vInfo"></div>
-    <button class="goBig" id="bGo">Lancer le chrono</button>
+    <div class="btns"><button class="goBig" id="bGo">Lancer le chrono</button><button class="goBig alt" id="bAgain" style="display:none">Retirer au sort</button><button class="goBig alt" id="bAdd30" style="display:none">+30 s</button><button class="goBig alt" id="bAdd60" style="display:none">+1 min</button></div>
+    <img class="incat l" src="../cats/noir.webp" alt=""><img class="incat r" src="../cats/orange.webp" alt="">
   </div>
 </div>
-<div class="cats" aria-hidden="true"><img src="../cats/noir.webp" alt=""><img src="../cats/orange.webp" alt=""></div>
 <button class="burger" id="burger" title="Réglages"><span></span><span></span><span></span></button>
 <div class="drawer" id="drawer"><div class="dwin">
   <div class="row" style="justify-content:space-between"><h2>Réglages tombola</h2><button id="dClose">✕ Fermer</button></div>
   <a href="../" style="color:#111">← Accueil</a>
   <h3>1. Le chrono</h3>
-  <div class="row"><label>Durée <input id="sMin" type="number" min="1" step="1" value="5" style="width:80px"> min</label><button class="go" id="bTimer">Lancer le chrono</button><button id="bTimerStop">Arrêter le chrono</button></div>
+  <div class="row"><label>Durée <input id="sMin" type="number" min="1" step="1" value="5" style="width:80px"> min</label><button class="go" id="bTimer">Lancer le chrono</button><button id="bTimerStop">Arrêter le chrono</button><button id="mAdd60">+1 min</button><button id="mAdd5">+5 min</button></div>
   <p class="note">Le chrono repart de zéro (nouvelle liste de participants) : chaque don pendant le chrono donne des tickets. À 0:00, la collecte s'arrête et le tirage se fait tout seul.</p>
   <label>Lot à gagner <input id="sLot" maxlength="40" placeholder="ex : un mug JoLinng" style="width:100%"></label>
   <label>Tickets <select id="sMode"><option value="don">1 don = 1 ticket</option><option value="euro">1 € = 1 ticket</option></select></label>
@@ -103,10 +109,16 @@ function check(){if(!T.started&&!T.stopped&&T.now>=T.at&&T.at>0){T.started=true;
 $('bTimer').onclick=()=>{const m=Math.max(1,+$('sMin').value||5);T.end=Date.now()+m*60000;T.donors={};T.drawn=[];T.started=true;T.stopped=false;T.winner=null;$('vName').textContent='';$('vName').className='name';$('drawer').classList.remove('on');flash('Faites vos dons !');save()};
 $('bTimerStop').onclick=()=>{T.end=0;save()};
 $('bGo').onclick=()=>$('bTimer').click();
+$('bAgain').onclick=()=>$('bRedraw').click();
+const addTime=sec=>{if(!T.end)return;T.end+=sec*1000;flash(`+${sec>=60?sec/60+' min':sec+' s'} au chrono !`);beep(780,.12);save()};
+$('mAdd60').onclick=()=>addTime(60);$('mAdd5').onclick=()=>addTime(300);
+$('bAdd30').onclick=()=>addTime(30);$('bAdd60').onclick=()=>addTime(60);
 const mins=()=>Math.max(1,+$('sMin').value||5);
 $('sMin').oninput=()=>{try{localStorage.setItem('jlTombolaMin',$('sMin').value)}catch(e){}};
 try{const v=localStorage.getItem('jlTombolaMin');if(v)$('sMin').value=v}catch(e){}
-setInterval(()=>{if(!T.end){const idle=(!T.started||!!T.winner||(T.stopped&&!Object.keys(T.donors).length))&&!anim;$('vTimer').style.display=idle&&!T.winner?'':'none';$('vTimer').style.color='#111';$('vTimer').textContent=mins()+':00';$('bGo').style.display=idle?'':'none';$('bGo').textContent=T.winner?'Relancer un chrono':'Lancer le chrono';return}
+setInterval(()=>{if(!T.end){const idle=(!T.started||!!T.winner||(T.stopped&&!Object.keys(T.donors).length))&&!anim;$('vTimer').style.display=idle&&!T.winner?'':'none';$('vTimer').style.color='#111';$('vTimer').textContent=mins()+':00';$('bGo').style.display=idle?'':'none';$('bGo').textContent=T.winner?'Relancer un chrono':'Lancer le chrono';$('bAgain').style.display=idle&&T.winner?'':'none';$('bAdd30').style.display=$('bAdd60').style.display='none';return}
+  $('bAdd30').style.display=$('bAdd60').style.display='';
+  $('bAgain').style.display='none';
   $('bGo').style.display='none';const left=Math.max(0,Math.ceil((T.end-Date.now())/1000));$('vTimer').style.display='';$('vTimer').textContent=Math.floor(left/60)+':'+String(left%60).padStart(2,'0');$('vTimer').style.color=left<=10?'#ff2a2a':'#111';
   if(left<=10&&left>0&&left!==window._lb){window._lb=left;beep(880,.06)}
   if(left===0){T.end=0;T.stopped=true;save();$('vTimer').style.display='none';setTimeout(draw,800)}},250);
@@ -136,7 +148,7 @@ function draw(){
   tick();
 }
 $('bDraw').onclick=()=>{T.winner=null;draw()};
-$('bRedraw').onclick=()=>{if(T.winner&&!T.drawn.includes(T.winner))T.drawn.push(T.winner);T.winner=null;draw()};
+$('bRedraw').onclick=()=>{$('bAgain').style.display='none';if(T.winner&&!T.drawn.includes(T.winner))T.drawn.push(T.winner);T.winner=null;draw()};
 $('bReset').onclick=()=>{if(!confirm('Tout remettre à zéro (participants, tirage) ?'))return;T.donors={};T.drawn=[];T.winner=null;T.started=false;T.stopped=false;save()};
 let actx=null;function beep(f,d){try{actx=actx||new AudioContext();const o=actx.createOscillator(),g=actx.createGain(),t=actx.currentTime;o.type='triangle';o.frequency.value=f;g.gain.setValueAtTime(.12,t);g.gain.exponentialRampToValueAtTime(.0001,t+d);o.connect(g).connect(actx.destination);o.start(t);o.stop(t+d+.02)}catch(e){}}
 let flashT=null;function flash(t){$('vInfo').textContent=t;clearTimeout(flashT);flashT=setTimeout(render,3500)}
