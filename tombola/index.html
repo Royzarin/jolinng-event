@@ -1,0 +1,207 @@
+<!DOCTYPE html>
+<html lang="fr"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Tombola · JoLinng Event</title><link rel="icon" href="../cats/noir.png">
+<link rel="preconnect" href="https://fonts.googleapis.com"><link href="https://fonts.googleapis.com/css2?family=Caveat+Brush&family=Gochi+Hand&display=swap" rel="stylesheet">
+<style>
+:root{--sky:#01d1ff;--yellow:#ffdf00;--red:#ff2a2a;--ink:#111;--paper:#fffbe9}
+*{box-sizing:border-box}html,body{margin:0;height:100%}
+body{background:var(--sky);color:var(--ink);font-family:"Gochi Hand","Comic Sans MS",cursive;overflow:hidden}
+.stage{position:fixed;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2vh;padding:2vh 2vw}
+h1{margin:0;font-family:"Caveat Brush",cursive;font-weight:400;font-size:min(13vw,15vh);line-height:.9;color:var(--yellow);-webkit-text-stroke:min(.8vw,1vh) var(--ink);paint-order:stroke fill;transform:rotate(-2deg)}
+.card{background:var(--paper);border:4px solid var(--ink);border-radius:22px 14px 26px 16px;box-shadow:6px 6px 0 var(--ink);padding:2.5vh 3vw;text-align:center;min-width:min(90vw,700px)}
+.lot{font-size:min(4vw,4.5vh)}
+.status{font-size:min(3.4vw,3.8vh);margin-top:1vh}
+.bar{height:min(3vw,3.4vh);background:#fff;border:3px solid var(--ink);border-radius:10px;margin:1.5vh auto 0;width:min(80vw,620px);overflow:hidden}
+.bar i{display:block;height:100%;background:var(--yellow);width:0;transition:width .6s}
+.name{font-family:"Caveat Brush",cursive;font-size:min(11vw,13vh);line-height:1;min-height:1.1em;margin:1vh 0;word-break:break-word}
+.name.win{color:var(--red);animation:pop .5s}
+@keyframes pop{0%{transform:scale(.4)}70%{transform:scale(1.15)}100%{transform:scale(1)}}
+.big{font-size:min(3vw,3.4vh)}
+.burger{position:fixed;left:12px;bottom:12px;z-index:40;width:52px;height:46px;border-radius:12px;background:var(--paper);border:2.5px solid #111;box-shadow:3px 3px 0 #111;display:flex;flex-direction:column;justify-content:center;align-items:center;gap:5px;cursor:pointer;opacity:.75}
+.burger span{display:block;width:26px;height:3.5px;background:#111;border-radius:3px}
+.drawer{position:fixed;inset:0;z-index:45;background:rgba(0,0,0,.45);display:none}.drawer.on{display:block}
+.dwin{position:absolute;left:0;top:0;bottom:0;width:min(560px,94vw);overflow-y:auto;background:var(--paper);border-right:3px solid #111;padding:16px 18px 40px;display:flex;flex-direction:column;gap:12px;font-size:18px}
+.dwin h2{margin:0;font-family:"Caveat Brush",cursive;font-weight:400;font-size:32px}
+.dwin h3{margin:6px 0 0;font-family:"Caveat Brush",cursive;font-weight:400;font-size:24px}
+.row{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+input,button,select{font-family:inherit;font-size:18px;border:2.5px solid #111;border-radius:10px;padding:4px 10px;background:#fff}
+button{cursor:pointer;box-shadow:2px 2px 0 #111}button.go{background:var(--yellow)}button.red{background:#ffb3b3}
+.note{font-size:15px;color:#333;margin:0}
+.sldot{width:14px;height:14px;border-radius:50%;border:2.5px solid #111;background:#ccc;display:inline-block}.sldot.ok{background:#3ddc84}.sldot.wait{background:#ffdf00}.sldot.err{background:#ff2a2a}
+.list{max-height:30vh;overflow:auto;border:2px dashed #111;border-radius:10px;padding:6px 10px;font-size:16px;background:#fff}
+.lock{position:fixed;inset:0;z-index:60;background:rgba(0,0,0,.6);display:flex;align-items:center;justify-content:center}
+.lock .card{min-width:300px;display:grid;gap:10px}
+</style></head><body>
+<div class="stage">
+  <h1>TOMBOLA !</h1>
+  <div class="card">
+    <div class="lot" id="vLot"></div>
+    <div class="status" id="vStatus"></div>
+    <div class="bar" id="vBar"><i id="vFill"></i></div>
+    <div class="name" id="vName"></div>
+    <div class="name" id="vTimer" style="color:#111;display:none"></div>
+    <div class="big" id="vInfo"></div>
+  </div>
+</div>
+<button class="burger" id="burger" title="Réglages"><span></span><span></span><span></span></button>
+<div class="drawer" id="drawer"><div class="dwin">
+  <div class="row" style="justify-content:space-between"><h2>Réglages tombola</h2><button id="dClose">✕ Fermer</button></div>
+  <a href="../" style="color:#111">← Accueil</a>
+  <h3>1. Le chrono</h3>
+  <div class="row"><label>Durée <input id="sMin" type="number" min="1" step="1" value="5" style="width:80px"> min</label><button class="go" id="bTimer">Lancer le chrono</button><button id="bTimerStop">Arrêter le chrono</button></div>
+  <p class="note">Le chrono repart de zéro (nouvelle liste de participants) : chaque don pendant le chrono donne des tickets. À 0:00, la collecte s'arrête et le tirage se fait tout seul.</p>
+  <label>Lot à gagner <input id="sLot" maxlength="40" placeholder="ex : un mug JoLinng" style="width:100%"></label>
+  <label>Tickets <select id="sMode"><option value="don">1 don = 1 ticket</option><option value="euro">1 € = 1 ticket</option></select></label>
+  <input id="sNow" type="hidden"><input id="sAt" type="hidden" value="0">
+  <button id="bStart" style="display:none"></button><button id="bStop" style="display:none"></button>
+  <h3>2. Dons en direct (Streamlabs)</h3>
+  <div class="row"><span id="slDot" class="sldot"></span><span id="slState">Non connecté</span></div>
+  <div class="row" id="slLock"><input id="slPin" type="password" inputmode="numeric" maxlength="4" placeholder="Code" style="width:90px"><button id="slShow">Afficher</button></div>
+  <div id="slInner" style="display:none" class="row">
+    <input id="slTok" type="password" autocomplete="off" placeholder="Colle ton token Socket API" style="width:100%">
+    <button class="go" id="slGo">Lancer la session</button><button id="slStop">Arrêter</button><button id="slForget">Effacer le token</button><button id="slHide">Cacher</button>
+  </div>
+  <p class="note">Si le token est déjà enregistré dans ce navigateur (Jo City), clique juste sur « Lancer la session ».</p>
+  <h3>Ajouter un don à la main</h3>
+  <div class="row"><input id="mWho" placeholder="Pseudo" maxlength="30" style="width:170px"><input id="mAmt" type="number" min="0.5" step="0.5" placeholder="€" style="width:90px"><button id="mAdd">Ajouter</button></div>
+  <h3>3. Le tirage</h3>
+  <div class="row"><button class="go" id="bDraw">Tirer au sort</button><button id="bRedraw">Nouveau tirage (sans le gagnant)</button></div>
+  <h3>Participants</h3>
+  <div class="list" id="vList">Personne pour l'instant.</div>
+  <button class="red" id="bReset">Tout remettre à zéro</button>
+</div></div>
+<div class="lock" id="lock"><div class="card"><b style="font-family:'Caveat Brush';font-size:28px">Code admin</b><input id="lCode" type="password" placeholder="Code"><button class="go" id="lOk">Entrer</button><span id="lErr" style="color:#d11"></span></div></div>
+<script src="../music.js"></script>
+<script>
+const $=id=>document.getElementById(id);
+const fmt=n=>(+n).toLocaleString('fr-FR',{maximumFractionDigits:2})+' €';
+const round2=v=>Math.round(v*100)/100;
+async function sha(t){const b=await crypto.subtle.digest('SHA-256',new TextEncoder().encode(t));return [...new Uint8Array(b)].map(x=>x.toString(16).padStart(2,'0')).join('')}
+/* accès : code admin (une fois par navigateur) */
+(async()=>{let ok=false;try{ok=localStorage.getItem('jolinngAdmin')==='1'}catch(e){}if(ok)$('lock').style.display='none'})();
+$('lOk').onclick=async()=>{if(await sha($('lCode').value.trim().toUpperCase())==='4304aaad1fd1051e70f32259dcd2ec2dc5ecd167aa6f3eae7a6454c42ca44d0e'){try{localStorage.setItem('jolinngAdmin','1')}catch(e){}$('lock').style.display='none'}else $('lErr').textContent='Code incorrect.'};
+$('lCode').onkeydown=e=>{if(e.key==='Enter')$('lOk').click()};
+/* état sauvegardé (survit à un rechargement) */
+let T={end:0,lot:'',now:0,at:0,mode:'don',started:false,stopped:false,donors:{},drawn:[],winner:null};
+try{Object.assign(T,JSON.parse(localStorage.getItem('jlTombola')||'{}'))}catch(e){}T.at=0;if(!T.end&&!T.stopped)T.started=false;
+const save=()=>{try{localStorage.setItem('jlTombola',JSON.stringify(T))}catch(e){}render()};
+$('sLot').value=T.lot;$('sMode').value=T.mode;
+$('sLot').oninput=()=>{T.lot=$('sLot').value.trim();save()};
+$('sNow').oninput=()=>{T.now=+$('sNow').value||0;check();save()};
+$('sAt').oninput=()=>{T.at=+$('sAt').value||0;check();save()};
+$('sMode').onchange=()=>{T.mode=$('sMode').value;save()};
+function check(){if(!T.started&&!T.stopped&&T.now>=T.at&&T.at>0){T.started=true;flash('LA TOMBOLA COMMENCE !')}}
+/* chrono */
+$('bTimer').onclick=()=>{const m=Math.max(1,+$('sMin').value||5);T.end=Date.now()+m*60000;T.donors={};T.drawn=[];T.started=true;T.stopped=false;T.winner=null;$('vName').textContent='';$('vName').className='name';$('drawer').classList.remove('on');flash('Faites vos dons !');save()};
+$('bTimerStop').onclick=()=>{T.end=0;save()};
+setInterval(()=>{if(!T.end){$('vTimer').style.display='none';return}const left=Math.max(0,Math.ceil((T.end-Date.now())/1000));$('vTimer').style.display='';$('vTimer').textContent=Math.floor(left/60)+':'+String(left%60).padStart(2,'0');$('vTimer').style.color=left<=10?'#ff2a2a':'#111';
+  if(left<=10&&left>0&&left!==window._lb){window._lb=left;beep(880,.06)}
+  if(left===0){T.end=0;T.stopped=true;save();$('vTimer').style.display='none';setTimeout(draw,800)}},250);
+$('bStart').onclick=()=>{T.started=true;T.stopped=false;save()};
+$('bStop').onclick=()=>{T.stopped=true;save()};
+function tickets(n){const d=T.donors[n];return T.mode==='euro'?Math.max(1,Math.floor(d.a)):d.n}
+/* un don arrive */
+function donate(a,who){
+  a=round2(+a);if(!(a>0))return;who=String(who||'Anonyme').trim().slice(0,30)||'Anonyme';
+  const was=T.started;T.now=round2((T.now||0)+a);$('sNow').value=T.now;check();
+  if(was&&!T.stopped){const d=T.donors[who]||(T.donors[who]={n:0,a:0});d.n++;d.a=round2(d.a+a);flash(`${who} : +${T.mode==='euro'?Math.max(1,Math.floor(a)):1} ticket`)}
+  save();
+}
+$('mAdd').onclick=()=>{donate($('mAmt').value,$('mWho').value);$('mWho').value='';$('mAmt').value=''};
+/* tirage */
+let anim=null;
+function draw(){
+  const names=Object.keys(T.donors).filter(n=>!T.drawn.includes(n));
+  if(!names.length){$('vName').textContent='Personne à tirer';$('vName').className='name';return}
+  const tot=names.reduce((s,n)=>s+tickets(n),0);let r=Math.random()*tot,win=names[names.length-1];
+  for(const n of names){r-=tickets(n);if(r<0){win=n;break}}
+  clearTimeout(anim);let i=0,step=0;const total=names.length>1?38:4;
+  $('drawer').classList.remove('on');
+  const tick=()=>{step++;$('vName').className='name';$('vName').textContent=names[i++%names.length];beep(420+Math.random()*200,.04);
+    if(step>=total){T.winner=win;$('vName').textContent=win;$('vName').className='name win';beep(660,.15);setTimeout(()=>beep(990,.3),130);save();return}
+    anim=setTimeout(tick,40+Math.pow(step/total,2)*380)};
+  tick();
+}
+$('bDraw').onclick=()=>{T.winner=null;draw()};
+$('bRedraw').onclick=()=>{if(T.winner&&!T.drawn.includes(T.winner))T.drawn.push(T.winner);T.winner=null;draw()};
+$('bReset').onclick=()=>{if(!confirm('Tout remettre à zéro (participants, tirage) ?'))return;T.donors={};T.drawn=[];T.winner=null;T.started=false;T.stopped=false;save()};
+let actx=null;function beep(f,d){try{actx=actx||new AudioContext();const o=actx.createOscillator(),g=actx.createGain(),t=actx.currentTime;o.type='triangle';o.frequency.value=f;g.gain.setValueAtTime(.12,t);g.gain.exponentialRampToValueAtTime(.0001,t+d);o.connect(g).connect(actx.destination);o.start(t);o.stop(t+d+.02)}catch(e){}}
+let flashT=null;function flash(t){$('vInfo').textContent=t;clearTimeout(flashT);flashT=setTimeout(render,3500)}
+function render(){
+  $('vLot').textContent=T.lot?'À gagner : '+T.lot:'';
+  const names=Object.keys(T.donors),tk=names.reduce((s,n)=>s+tickets(n),0);
+  if(!T.started){$('vStatus').textContent='Bientôt : lance le chrono depuis le menu ☰';$('vBar').style.display='none'}
+  else{$('vBar').style.display='none';$('vStatus').textContent=T.stopped?`Collecte terminée · ${names.length} participant${names.length>1?'s':''} · ${tk} ticket${tk>1?'s':''}`:`En cours ! ${T.mode==='euro'?'1 € = 1 ticket':'1 don = 1 ticket'} · ${names.length} participant${names.length>1?'s':''} · ${tk} ticket${tk>1?'s':''}`}
+  if(T.winner){$('vName').textContent=T.winner;$('vName').className='name win';$('vInfo').textContent=T.lot?`${T.winner} remporte ${T.lot} !`:`Bravo ${T.winner} !`}
+  else if(!anim||$('vName').className!=='name'){if(!T.winner&&$('vName').className==='name win')$('vName').textContent='';if(!flashT)$('vInfo').textContent=T.started?'Chaque don te donne une chance !':''}
+  $('vList').innerHTML=names.length?names.map(n=>`<div>${n.replace(/[<>&]/g,'')} — ${tickets(n)} ticket${tickets(n)>1?'s':''} (${fmt(T.donors[n].a)})${T.drawn.includes(n)?' · déjà tiré':''}</div>`).join(''):"Personne pour l'instant."
+}
+render();
+/* menu */
+$('burger').onclick=()=>$('drawer').classList.toggle('on');$('dClose').onclick=()=>$('drawer').classList.remove('on');
+$('drawer').addEventListener('pointerdown',e=>{if(e.target===$('drawer'))$('drawer').classList.remove('on')});
+/* jeton caché : code 0230 */
+(function(){const H='5f8415ac6340bbae4ebc8c77dac21c7fab54db45a306396bff6c678e012ae5fe';const open=async()=>{if(await sha($('slPin').value.trim())!==H){$('slPin').value='';$('slPin').placeholder='Code faux';return}$('slPin').value='';$('slInner').style.display='';$('slLock').style.display='none'};
+$('slShow').onclick=open;$('slPin').onkeydown=e=>{if(e.key==='Enter')open()};$('slHide').onclick=()=>{$('slInner').style.display='none';$('slLock').style.display='';$('slTok').value=''}})();
+</script>
+<script>
+const fmtSL=fmt;
+
+/* ================= Dons en direct : Streamlabs (Socket API) =================
+   Connexion directe à Streamlabs depuis le PC de Lynn (WebSocket, protocole Socket.IO v2).
+   Écoute les dons classiques (« donation ») et les dons Streamlabs Charity (« streamlabscharitydonation »).
+   Le token est gardé seulement dans ce navigateur (localStorage). */
+const SL={ws:null,ping:null,seen:new Set(),count:0,fails:0,stop:true,ok:false,timer:null};
+const SL_KEY='jolinngSlToken';
+function slTok(){try{return localStorage.getItem(SL_KEY)||''}catch(e){return ''}}
+function slStatus(t,cls){document.getElementById('slState').textContent=t;document.getElementById('slDot').className='sldot '+(cls||'')}
+function slAmount(m){
+  const f=m.formatted_amount||m.formattedAmount;
+  if(f){let s=String(f).replace(/[^\d.,]/g,'');const c=s.lastIndexOf(','),d=s.lastIndexOf('.');
+    if(c>d)s=s.replace(/\./g,'').replace(',','.');else s=s.replace(/,/g,'');const v=parseFloat(s);if(v>0)return v}
+  const v=parseFloat(String(m.amount??'').replace(',','.'));return v>0?v:0;
+}
+function slEvent(ev){
+  if(!ev||(ev.type!=='donation'&&ev.type!=='streamlabscharitydonation'))return;
+  const list=Array.isArray(ev.message)?ev.message:[ev.message];
+  list.forEach((m,i)=>{
+    if(!m)return;
+    const id=ev.type+':'+(m.id??m._id??m.donation_id??((ev.event_id||'')+':'+i+':'+(m.name||'')+':'+(m.amount||'')));
+    if(SL.seen.has(id))return;SL.seen.add(id);
+    const a=Math.round(slAmount(m)*100)/100;if(!(a>0))return;
+    const who=String(m.name||m.from||m.display_name||m.username||'Anonyme').trim().slice(0,30)||'Anonyme';
+    SL.count++;donate(a,who);
+    slStatus(`Connecté · ${SL.count} don${SL.count>1?'s':''} reçu${SL.count>1?'s':''} (dernier : ${who}, ${fmt(a)})`,'ok');
+  });
+}
+function slConnect(){
+  const tok=slTok();if(!tok){slStatus("Colle d'abord ton token Socket API",'err');return}
+  if(SL.ws){SL.ws.onclose=null;try{SL.ws.close()}catch(e){}}
+  clearInterval(SL.ping);clearTimeout(SL.timer);SL.stop=false;SL.ok=false;
+  slStatus('Connexion à Streamlabs…','wait');
+  let ws;try{ws=new WebSocket('wss://sockets.streamlabs.com/socket.io/?token='+encodeURIComponent(tok)+'&EIO=3&transport=websocket')}catch(e){slStatus('Connexion impossible','err');return}
+  SL.ws=ws;
+  SL.timer=setTimeout(()=>{if(!SL.ok&&SL.ws===ws){slStatus('Pas de réponse de Streamlabs : vérifie le token','err');SL.stop=true;try{ws.close()}catch(e){}}},12000);
+  ws.onmessage=e=>{
+    const d=String(e.data);
+    if(d[0]==='0'){let iv=25000;try{iv=JSON.parse(d.slice(1)).pingInterval||iv}catch(_){}clearInterval(SL.ping);SL.ping=setInterval(()=>{if(ws.readyState===1)ws.send('2')},iv)}
+    else if(d==='40'||d.startsWith('40')){SL.ok=true;SL.fails=0;clearTimeout(SL.timer);slStatus(SL.count?`Connecté · ${SL.count} dons reçus`:'Connecté : les dons arrivent dans le jeu','ok')}
+    else if(d.startsWith('44')){SL.stop=true;slStatus('Token refusé par Streamlabs','err');try{ws.close()}catch(_){}}
+    else if(d.startsWith('42')){try{const a=JSON.parse(d.slice(2));if(a[0]==='event')slEvent(a[1])}catch(_){}}
+  };
+  ws.onclose=()=>{
+    clearInterval(SL.ping);if(SL.ws!==ws)return;
+    if(SL.stop){if(!/refusé|réponse|impossible/.test(document.getElementById('slState').textContent))slStatus('Non connecté','');return}
+    if(!SL.ok&&++SL.fails>=3){SL.stop=true;slStatus('Impossible de se connecter : vérifie le token','err');return}
+    const wait=Math.min(30000,2000*Math.pow(2,SL.fails));slStatus('Connexion perdue, nouvelle tentative…','wait');SL.timer=setTimeout(()=>{if(!SL.stop)slConnect()},wait);
+  };
+}
+function slStop(){SL.stop=true;clearTimeout(SL.timer);clearInterval(SL.ping);if(SL.ws){try{SL.ws.close()}catch(e){}}SL.ws=null;slStatus('Non connecté','')}
+document.getElementById('slGo').onclick=()=>{const v=document.getElementById('slTok').value.trim();if(v){try{localStorage.setItem(SL_KEY,v)}catch(e){}}document.getElementById('slTok').value='';slTokHint();SL.fails=0;slConnect();0};
+document.getElementById('slStop').onclick=()=>{slStop();0};
+document.getElementById('slForget').onclick=()=>{slStop();try{localStorage.removeItem(SL_KEY)}catch(e){}document.getElementById('slTok').value='';slTokHint()};
+function slTokHint(){document.getElementById('slTok').placeholder=slTok()?'Token enregistré (•••• caché)':'Colle ton token Socket API'}
+slTokHint();
+
+</script>
+</body></html>
